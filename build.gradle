@@ -1,0 +1,21 @@
+apply plugin: "groovy"
+
+version = "0.0.1"
+description = "Moi.Den.Gi API smoke test suite"
+
+sourceCompatibility = 1.8
+
+repositories {
+  mavenCentral()
+}
+
+dependencies {
+  compile "org.codehaus.groovy:groovy-all:2.4.8"
+  testCompile "org.spockframework:spock-core:1.0-groovy-2.4"
+
+  testCompile "org.hamcrest:hamcrest-core:1.3" // only necessary if Hamcrest matchers are used
+  testRuntime "cglib:cglib-nodep:3.1"          // allows mocking of classes (in addition to interfaces)
+  testRuntime "org.objenesis:objenesis:2.1"    // allows mocking of classes without default constructor (together with CGLIB)
+
+  testCompile 'io.rest-assured:rest-assured:3.0.2'
+}
