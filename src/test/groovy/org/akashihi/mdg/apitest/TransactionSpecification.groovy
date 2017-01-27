@@ -10,57 +10,12 @@ import static io.restassured.matcher.RestAssuredMatchers.*
 import static org.hamcrest.Matchers.*
 
 class TransactionSpecification extends Specification {
-    def accountExpense = [
-            "data": [
-                    "type"      : "account",
-                    "attributes": [
-                            "account_type": "expense",
-                            "currency_id" : 978,
-                            "name"        : "Rent"
-                    ]
-            ]
-    ]
 
-    def accountAsset = [
-            "data": [
-                    "type"      : "account",
-                    "attributes": [
-                            "account_type": "asset",
-                            "currency_id" : 978,
-                            "name"        : "Current"
-                    ]
-            ]
-    ]
-
-    def accountIncome = [
-            "data": [
-                    "type"      : "account",
-                    "attributes": [
-                            "account_type": "income",
-                            "currency_id" : 978,
-                            "name"        : "Salary"
-                    ]
-            ]
-    ]
-
-    private static def makeAccount(account) {
-        given()
-                .contentType("application/vnd.mdg+json").
-                when()
-                .request().body(JsonOutput.toJson(account))
-                .post("/account").
-                then()
-                .assertThat().statusCode(201)
-                .extract().path("data.id")
-    }
-
-    private def prepareAccounts() {
-        [makeAccount(accountIncome), makeAccount(accountAsset), makeAccount(accountExpense)]
-    }
+    TransactionFixture f = new TransactionFixture();
 
     def "User creates new transaction"() {
         given: "Several accounts"
-        def accounts = prepareAccounts()
+        def accounts = f.prepareAccounts()
 
         when: "New transaction on those accounts is submitted"
         def transaction = [
@@ -72,15 +27,15 @@ class TransactionSpecification extends Specification {
                                 "tags"      : ["test", "transaction"],
                                 "operations": [
                                         [
-                                                "account_id": accounts[0],
+                                                "account_id": accounts["income"],
                                                 "amount"    : -150
                                         ],
                                         [
-                                                "account_id": accounts[1],
+                                                "account_id": accounts["asset"],
                                                 "amount"    : 50
                                         ],
                                         [
-                                                "account_id": accounts[2],
+                                                "account_id": accounts["expense"],
                                                 "amount"    : 100
                                         ]
                                 ]
@@ -109,7 +64,6 @@ class TransactionSpecification extends Specification {
         given()
                 .contentType("application/vnd.mdg+json").
                 when()
-                .request().body(JsonOutput.toJson(transaction))
                 .get("/transaction").
                 then()
                 .assertThat().statusCode(200)
@@ -126,40 +80,7 @@ class TransactionSpecification extends Specification {
 
     def "User checks transaction data"() {
         given: "New transaction is submitted"
-        def accounts = prepareAccounts()
-        def transaction = [
-                "data": [
-                        "type"      : "transaction",
-                        "attributes": [
-                                "timestamp" : LocalDateTime.now(),
-                                "comment"   : "Test transaction",
-                                "tags"      : ["test", "transaction"],
-                                "operations": [
-                                        [
-                                                "account_id": accounts[0],
-                                                "amount"    : -150
-                                        ],
-                                        [
-                                                "account_id": accounts[1],
-                                                "amount"    : 50
-                                        ],
-                                        [
-                                                "account_id": accounts[2],
-                                                "amount"    : 100
-                                        ]
-                                ]
-                        ]
-                ]
-        ]
-        def txId = given()
-                .contentType("application/vnd.mdg+json").
-                when()
-                .request().body(JsonOutput.toJson(transaction))
-                .post("/transaction").
-                then()
-                .assertThat().statusCode(201)
-                .assertThat().contentType("application/vnd.mdg+json")
-                .extract().path("data.id")
+        def txId = f.makeRentTransaction()
 
         when: "Specific transaction is requested"
         def response = given()
@@ -182,7 +103,7 @@ class TransactionSpecification extends Specification {
 
     def "User modifies transaction data"() {
         given: "New transaction is submitted"
-        def accounts = prepareAccounts()
+        def accounts = f.prepareAccounts()
         def transaction = [
                 "data": [
                         "type"      : "transaction",
@@ -192,15 +113,15 @@ class TransactionSpecification extends Specification {
                                 "tags"      : ["test", "transaction"],
                                 "operations": [
                                         [
-                                                "account_id": accounts[0],
+                                                "account_id": accounts["income"],
                                                 "amount"    : -150
                                         ],
                                         [
-                                                "account_id": accounts[1],
+                                                "account_id": accounts["asset"],
                                                 "amount"    : 50
                                         ],
                                         [
-                                                "account_id": accounts[2],
+                                                "account_id": accounts["expense"],
                                                 "amount"    : 100
                                         ]
                                 ]
@@ -244,40 +165,7 @@ class TransactionSpecification extends Specification {
 
     def "User deletes a transaction"() {
         given: "New transaction is submitted"
-        def accounts = prepareAccounts()
-        def transaction = [
-                "data": [
-                        "type"      : "transaction",
-                        "attributes": [
-                                "timestamp" : LocalDateTime.now(),
-                                "comment"   : "Test transaction",
-                                "tags"      : ["test", "transaction"],
-                                "operations": [
-                                        [
-                                                "account_id": accounts[0],
-                                                "amount"    : -150
-                                        ],
-                                        [
-                                                "account_id": accounts[1],
-                                                "amount"    : 50
-                                        ],
-                                        [
-                                                "account_id": accounts[2],
-                                                "amount"    : 100
-                                        ]
-                                ]
-                        ]
-                ]
-        ]
-        def txId = given()
-                .contentType("application/vnd.mdg+json").
-                when()
-                .request().body(JsonOutput.toJson(transaction))
-                .post("/transaction").
-                then()
-                .assertThat().statusCode(201)
-                .assertThat().contentType("application/vnd.mdg+json")
-                .extract().path("data.id")
+        def txId = f.makeRentTransaction()
 
         when: "Transaction is deleted"
         when().delete("/transaction/{id}", txId)
