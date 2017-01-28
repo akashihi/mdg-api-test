@@ -1,12 +1,12 @@
-package org.akashihi.mdg.apitest
+package org.akashihi.mdg.apitest.tests
 
 import groovy.json.JsonOutput
+import org.akashihi.mdg.apitest.fixtures.TransactionFixture
 import spock.lang.*
 
 import java.time.LocalDateTime
 
 import static io.restassured.RestAssured.*
-import static io.restassured.matcher.RestAssuredMatchers.*
 import static org.hamcrest.Matchers.*
 
 class TransactionSpecification extends Specification {

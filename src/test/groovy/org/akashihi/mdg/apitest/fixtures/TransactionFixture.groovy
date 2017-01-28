@@ -1,4 +1,4 @@
-package org.akashihi.mdg.apitest
+package org.akashihi.mdg.apitest.fixtures
 
 import groovy.json.JsonOutput
 

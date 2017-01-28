@@ -1,4 +1,4 @@
-package org.akashihi.mdg.apitest
+package org.akashihi.mdg.apitest.tests
 
 import groovy.json.JsonOutput
 import spock.lang.*
