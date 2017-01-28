@@ -4,9 +4,14 @@ import spock.lang.*
 
 import static io.restassured.RestAssured.*
 import static io.restassured.matcher.RestAssuredMatchers.*
+import static org.akashihi.mdg.apitest.apiConnectionBase.setupAPI
 import static org.hamcrest.Matchers.*
 
 class CurrencySpecification extends Specification {
+
+    def setupSpec() {
+        setupAPI();
+    }
 
     def "User requests list of all currencies"() {
         given:
@@ -17,6 +22,8 @@ class CurrencySpecification extends Specification {
 
         then: "Non empty currencies list should be returned"
         response.then()
+                .log()
+                .ifValidationFails()
                 .assertThat().statusCode(200)
                 .assertThat().contentType("application/vnd.mdg+json")
                 .body("data.length()", not(0))
