@@ -70,6 +70,6 @@ class CurrencySpecification extends Specification {
 
         assertThat(body.read("data.type"), equalTo("currency"))
         assertThat(body.read("data.id"), equalTo(currencyId))
-        assertThat(body.read("data.attributes.code.length"), stringHasSize(3))
+        assertThat(body.read("data.attributes.code"), stringHasSize(3))
     }
 }
