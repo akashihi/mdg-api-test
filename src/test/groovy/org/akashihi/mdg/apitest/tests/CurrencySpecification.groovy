@@ -72,4 +72,21 @@ class CurrencySpecification extends Specification {
         assertThat(body.read("data.id"), equalTo(currencyId))
         assertThat(body.read("data.attributes.code"), stringHasSize(3))
     }
+
+    def "User requests non-existent currency object"() {
+        given: "Some invalid currency id"
+        // By definition all currency ids
+        // are in between 100 and 999 inclusive
+        def currencyId = 1
+
+        when: "Specific currency is requested"
+        def response = given()
+                .contentType("application/vnd.mdg+json").
+                when()
+                .get("/currency/{id}", currencyId)
+
+        then: "Not found error should be returned"
+        response.then()
+                .assertThat().statusCode(404)
+    }
 }
