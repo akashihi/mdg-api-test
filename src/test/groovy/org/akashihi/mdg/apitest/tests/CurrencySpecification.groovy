@@ -1,10 +1,9 @@
 package org.akashihi.mdg.apitest.tests
 
 import com.jayway.jsonpath.JsonPath
-import spock.lang.*
+import spock.lang.Specification
 
-import static io.restassured.RestAssured.*
-import static io.restassured.matcher.RestAssuredMatchers.*
+import static io.restassured.RestAssured.given
 import static org.akashihi.mdg.apitest.apiConnectionBase.setupAPI
 import static org.akashihi.mdg.apitest.matchers.StringHasSizeMatcher.stringHasSize
 import static org.hamcrest.Matchers.*

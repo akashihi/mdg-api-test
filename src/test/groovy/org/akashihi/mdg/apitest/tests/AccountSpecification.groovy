@@ -2,19 +2,11 @@ package org.akashihi.mdg.apitest.tests
 
 import com.jayway.jsonpath.JsonPath
 import groovy.json.JsonOutput
-import spock.lang.*
+import spock.lang.Specification
 
-import static io.restassured.RestAssured.*
-import static io.restassured.matcher.RestAssuredMatchers.*
+import static io.restassured.RestAssured.given
 import static org.akashihi.mdg.apitest.apiConnectionBase.setupAPI
-import static org.akashihi.mdg.apitest.matchers.StringHasSizeMatcher.stringHasSize
-import static org.akashihi.mdg.apitest.matchers.StringHasSizeMatcher.stringHasSize
-import static org.akashihi.mdg.apitest.matchers.StringHasSizeMatcher.stringHasSize
 import static org.hamcrest.Matchers.*
-import static org.junit.Assert.assertThat
-import static org.junit.Assert.assertThat
-import static org.junit.Assert.assertThat
-import static org.junit.Assert.assertThat
 import static org.junit.Assert.assertThat
 
 class AccountSpecification extends Specification {
@@ -116,7 +108,7 @@ class AccountSpecification extends Specification {
                 .request().body(JsonOutput.toJson(modifiedAccount))
                 .put("/account/{id}", accountId).
                 then()
-                .assertThat().statusCode(200)
+                .assertThat().statusCode(202)
                 .assertThat().contentType("application/vnd.mdg+json")
                 .body("data.attributes.name", equalTo("Monthly rent"))
 
@@ -126,7 +118,7 @@ class AccountSpecification extends Specification {
                 when()
                 .get("/account/{id}", accountId).
                 then()
-                .assertThat().statusCode(201)
+                .assertThat().statusCode(200)
                 .assertThat().contentType("application/vnd.mdg+json")
                 .body("data.type", equalTo("account"))
                 .body("data.attributes.account_type", equalTo("expense"))

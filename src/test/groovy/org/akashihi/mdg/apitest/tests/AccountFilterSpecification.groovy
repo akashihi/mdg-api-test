@@ -1,11 +1,17 @@
 package org.akashihi.mdg.apitest.tests
 
+import com.jayway.jsonpath.JsonPath
 import groovy.json.JsonOutput
-import spock.lang.*
+import spock.lang.Specification
 
-import static io.restassured.RestAssured.*
-import static io.restassured.matcher.RestAssuredMatchers.*
-import static org.hamcrest.Matchers.*
+import static io.restassured.RestAssured.given
+import static io.restassured.RestAssured.when
+import static org.akashihi.mdg.apitest.apiConnectionBase.setupAPI
+import static org.hamcrest.Matchers.empty
+import static org.hamcrest.Matchers.equalTo
+import static org.hamcrest.Matchers.is
+import static org.hamcrest.Matchers.not
+import static org.junit.Assert.assertThat
 
 class AccountFilterSpecification extends Specification {
     def account = [
@@ -18,6 +24,10 @@ class AccountFilterSpecification extends Specification {
                     ]
             ]
     ]
+
+    def setupSpec() {
+        setupAPI();
+    }
 
     def "User hides an account"() {
         given: "A brand new account"
@@ -37,14 +47,17 @@ class AccountFilterSpecification extends Specification {
                 .assertThat().statusCode(204)
 
         then: "Deleted account should be absent from accounts list"
-        given()
+        def response = given()
                 .contentType("application/vnd.mdg+json").
                 when()
-                .get("/account").
-                then()
+                .get("/account")
+        def body = JsonPath.parse(response
+                .then()
                 .assertThat().statusCode(200)
                 .assertThat().contentType("application/vnd.mdg+json")
-                .body("data[?(@.id == ${accountId})].length()", is(0))
+                .extract().asString()
+        )
+        assertThat(body.read("data[?(@.id == ${accountId})]"), empty())
     }
 
     def "User requests account list including hidden accounts"() {
@@ -65,16 +78,19 @@ class AccountFilterSpecification extends Specification {
                 .assertThat().statusCode(204)
 
         then: "Deleted account should be in accounts list if requested"
-        given()
-                .queryParam("filter", "{hidden:true}")
+        def response = given()
+                .queryParam("filter", "{\"hidden\":true}")
                 .contentType("application/vnd.mdg+json").
                 when()
-                .get("/account").
-                then()
+                .get("/account")
+        def body = JsonPath.parse(response
+                .then()
                 .assertThat().statusCode(200)
                 .assertThat().contentType("application/vnd.mdg+json")
-                .body("data[?(@.id == ${accountId})].length()", is(1))
-                .body("data[?(@.id == ${accountId})].attributes.hidden", is(true))
+                .extract().asString()
+        )
+        assertThat(body.read("data[?(@.id == ${accountId})]", List.class).size(), is(1))
+        assertThat(body.read("data[?(@.id == ${accountId})].attributes.hidden", List.class).first(), is(true))
     }
 
     def "User requests account list, filtering it by some field"() {
@@ -92,17 +108,19 @@ class AccountFilterSpecification extends Specification {
 
         when: "List of accounts with specific name is requested"
         def response = given()
-                .queryParam("filter", "{name:FilterMe}")
+                .queryParam("filter", "{\"name\":\"FilterMe\"}")
                 .contentType("application/vnd.mdg+json").
                 when()
                 .get("/account")
 
         then: "List should consist only of objects with specified ane"
-        response.then()
+        def body = JsonPath.parse(response
+                .then()
                 .assertThat().statusCode(200)
                 .assertThat().contentType("application/vnd.mdg+json")
-                .body("data[?(@.attributes.name == 'FilterMe')].length()", is(not(0)))
-                .body("data[?(@.attributes.name != 'FilterMe')].length()", is(0))
-
+                .extract().asString()
+        )
+        assertThat(body.read("data[?(@.attributes.name == 'FilterMe')]", List.class).size(), is(not(0)))
+        assertThat(body.read("data[?(@.id != 'FilterMe')].attributes.hidden", List.class), not(empty()))
     }
 }
