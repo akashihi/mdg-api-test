@@ -7,10 +7,7 @@ import spock.lang.Specification
 import static io.restassured.RestAssured.given
 import static io.restassured.RestAssured.when
 import static org.akashihi.mdg.apitest.apiConnectionBase.setupAPI
-import static org.hamcrest.Matchers.empty
-import static org.hamcrest.Matchers.equalTo
-import static org.hamcrest.Matchers.is
-import static org.hamcrest.Matchers.not
+import static org.hamcrest.Matchers.*
 import static org.junit.Assert.assertThat
 
 class AccountFilterSpecification extends Specification {

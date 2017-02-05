@@ -1,5 +1,6 @@
 package org.akashihi.mdg.apitest.tests
 
+import com.jayway.jsonpath.JsonPath
 import groovy.json.JsonOutput
 import org.akashihi.mdg.apitest.fixtures.TransactionFixture
 import spock.lang.*
@@ -7,11 +8,17 @@ import spock.lang.*
 import java.time.LocalDateTime
 
 import static io.restassured.RestAssured.*
+import static org.akashihi.mdg.apitest.apiConnectionBase.setupAPI
 import static org.hamcrest.Matchers.*
+import static org.junit.Assert.assertThat
 
 class TransactionSpecification extends Specification {
 
     TransactionFixture f = new TransactionFixture();
+
+    def setupSpec() {
+        setupAPI();
+    }
 
     def "User creates new transaction"() {
         given: "Several accounts"
@@ -22,7 +29,7 @@ class TransactionSpecification extends Specification {
                 "data": [
                         "type"      : "transaction",
                         "attributes": [
-                                "timestamp" : LocalDateTime.now(),
+                                "timestamp" : new Date(),
                                 "comment"   : "Test transaction",
                                 "tags"      : ["test", "transaction"],
                                 "operations": [
@@ -42,40 +49,39 @@ class TransactionSpecification extends Specification {
                         ]
                 ]
         ]
-        def txId = given()
+        def response =given()
                 .contentType("application/vnd.mdg+json").
                 when()
                 .request().body(JsonOutput.toJson(transaction))
-                .post("/transaction").
+                .post("/transaction")
+        def body = JsonPath.parse(response.
                 then()
                 .assertThat().statusCode(201)
                 .assertThat().contentType("application/vnd.mdg+json")
                 .assertThat().header("Location", contains("/transaction/"))
-                .body("data.type", equalTo("transaction"))
-                .body("data.attributes.comment", equalTo("Test transaction"))
-                .body("data.attributes.tags", containsInAnyOrder("test", "transaction"))
-                .body("data.attributes.operations.*.account_id", equalTo(accounts))
-                .body("data.attributes.operations[0].amount", is(-150))
-                .body("data.attributes.operations[1].amount", is(50))
-                .body("data.attributes.operations[2].amount", is(100))
-                .extract().path("data.id")
+                .extract().asString())
 
+        assertThat(body.read("data.type"), equalTo("transaction"))
+        assertThat(body.read("data.attributes.comment"), equalTo("Test transaction"))
+        assertThat(body.read("data.attributes.tags"), containsInAnyOrder("test", "transaction"))
+        assertThat(body.read("data.attributes.operations.*.account_id"), equalTo(accounts))
+        assertThat(body.read("data.attributes.operations.*.amount"), containsInAnyOrder(-150, 50, 100))
+        def txId =response.then().extract().path("data.id")
         then: "Transaction appears on transaction list"
-        given()
+        def listResponse = given()
                 .contentType("application/vnd.mdg+json").
                 when()
-                .get("/transaction").
-                then()
+                .get("/transaction")
+        def listBody =  JsonPath.parse(listResponse.then()
                 .assertThat().statusCode(200)
                 .assertThat().contentType("application/vnd.mdg+json")
-                .body("data.length()", not(0))
-                .body("data[?(@.id == ${txId})].type", equalTo("transaction"))
-                .body("data[?(@.id == ${txId})].attributes.comment", equalTo("Test transaction"))
-                .body("data[?(@.id == ${txId})].attributes.tags", containsInAnyOrder("test", "transaction"))
-                .body("data[?(@.id == ${txId})].attributes.operations.*.account_id", equalTo(accounts))
-                .body("data[?(@.id == ${txId})].attributes.operations[0].amount", is(-150))
-                .body("data[?(@.id == ${txId})].attributes.operations[1].amount", is(50))
-                .body("data[?(@.id == ${txId})].attributes.operations[2].amount", is(100))
+                .extract().asString())
+        assertThat(listBody.read("data", List.class).size(), is(not(0)))
+        assertThat(listBody.read("data[?(@.id == ${txId})].type"), equalTo("transaction"))
+        assertThat(listBody.read("data[?(@.id == ${txId})].attributes.comment"), equalTo("Test transaction"))
+        assertThat(listBody.read("data[?(@.id == ${txId})].attributes.tags"), containsInAnyOrder("test", "transaction"))
+        assertThat(listBody.read("data[?(@.id == ${txId})].attributes.operations.account_id"), equalTo(accounts))
+        assertThat(listBody.read("data[?(@.id == ${txId})].attributes.operations.amount"), containsInAnyOrder(-150, 50, 100))
     }
 
     def "User checks transaction data"() {
