@@ -100,7 +100,6 @@ class TransactionSpecification extends Specification {
                 .body("data.type", equalTo("transaction"))
                 .body("data.attributes.comment", equalTo("Test transaction"))
                 .body("data.attributes.tags", containsInAnyOrder("test", "transaction"))
-                .body("data.attributes.operations.*.account_id", equalTo(accounts))
                 .body("data.attributes.operations[0].amount", is(-150))
                 .body("data.attributes.operations[1].amount", is(50))
                 .body("data.attributes.operations[2].amount", is(100))
@@ -177,14 +176,16 @@ class TransactionSpecification extends Specification {
         .then().assertThat().statusCode(204)
 
         then: "Transaction should not appear in transaction list"
-        given()
+        def response = given()
                 .contentType("application/vnd.mdg+json").
                 when()
-                .get("/transaction").
-                then()
+                .get("/transaction")
+        def body = JsonPath.parse(response.then()
                 .assertThat().statusCode(200)
                 .assertThat().contentType("application/vnd.mdg+json")
-                .body("data[?(@.id == ${txId})].length()", is(0))
+                .extract().asString())
+
+        assertThat(body.read("data[?(@.id == ${txId})]", List.class), empty())
     }
 }
 
