@@ -29,7 +29,7 @@ class TransactionSpecification extends Specification {
                 "data": [
                         "type"      : "transaction",
                         "attributes": [
-                                "timestamp" : new Date(),
+                                "timestamp" : '2017-02-05T16:45:36',
                                 "comment"   : "Test transaction",
                                 "tags"      : ["test", "transaction"],
                                 "operations": [
@@ -58,15 +58,15 @@ class TransactionSpecification extends Specification {
                 then()
                 .assertThat().statusCode(201)
                 .assertThat().contentType("application/vnd.mdg+json")
-                .assertThat().header("Location", contains("/transaction/"))
+                .assertThat().header("Location", containsString("/api/transaction/"))
                 .extract().asString())
 
         assertThat(body.read("data.type"), equalTo("transaction"))
         assertThat(body.read("data.attributes.comment"), equalTo("Test transaction"))
         assertThat(body.read("data.attributes.tags"), containsInAnyOrder("test", "transaction"))
-        assertThat(body.read("data.attributes.operations.*.account_id"), equalTo(accounts))
         assertThat(body.read("data.attributes.operations.*.amount"), containsInAnyOrder(-150, 50, 100))
         def txId =response.then().extract().path("data.id")
+
         then: "Transaction appears on transaction list"
         def listResponse = given()
                 .contentType("application/vnd.mdg+json").
@@ -77,11 +77,10 @@ class TransactionSpecification extends Specification {
                 .assertThat().contentType("application/vnd.mdg+json")
                 .extract().asString())
         assertThat(listBody.read("data", List.class).size(), is(not(0)))
-        assertThat(listBody.read("data[?(@.id == ${txId})].type"), equalTo("transaction"))
-        assertThat(listBody.read("data[?(@.id == ${txId})].attributes.comment"), equalTo("Test transaction"))
-        assertThat(listBody.read("data[?(@.id == ${txId})].attributes.tags"), containsInAnyOrder("test", "transaction"))
-        assertThat(listBody.read("data[?(@.id == ${txId})].attributes.operations.account_id"), equalTo(accounts))
-        assertThat(listBody.read("data[?(@.id == ${txId})].attributes.operations.amount"), containsInAnyOrder(-150, 50, 100))
+        assertThat(listBody.read("data[?(@.id == ${txId})].type", List.class).first(), equalTo("transaction"))
+        assertThat(listBody.read("data[?(@.id == ${txId})].attributes.comment", List.class).first(), equalTo("Test transaction"))
+        assertThat(listBody.read("data[?(@.id == ${txId})].attributes.tags", List.class).first(), containsInAnyOrder("test", "transaction"))
+        assertThat(listBody.read("data[?(@.id == ${txId})].attributes.operations.*.amount"), containsInAnyOrder(-150, 50, 100))
     }
 
     def "User checks transaction data"() {
@@ -114,7 +113,7 @@ class TransactionSpecification extends Specification {
                 "data": [
                         "type"      : "transaction",
                         "attributes": [
-                                "timestamp" : LocalDateTime.now(),
+                                "timestamp" : '2017-02-05T16:45:36',
                                 "comment"   : "Test transaction",
                                 "tags"      : ["test", "transaction"],
                                 "operations": [

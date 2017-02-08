@@ -52,7 +52,7 @@ class TransactionFixture {
     }
 
     public def prepareAccounts() {
-        ["income": makeAccount(accountIncome), "asset": makeAccount(accountAsset), "expense": makeAccount(accountExpense)]
+        ["income": Long.valueOf(makeAccount(accountIncome)), "asset": Long.valueOf(makeAccount(accountAsset)), "expense": Long.valueOf(makeAccount(accountExpense))]
     }
 
     private static def makeTransaction(transaction) {
@@ -73,7 +73,7 @@ class TransactionFixture {
                 "data": [
                         "type"      : "transaction",
                         "attributes": [
-                                "timestamp" : LocalDateTime.now(),
+                                "timestamp" : "2017-02-05T16:45:36",
                                 "comment"   : "Test transaction",
                                 "tags"      : ["test", "transaction"],
                                 "operations": [
@@ -102,7 +102,7 @@ class TransactionFixture {
                 "data": [
                         "type"      : "transaction",
                         "attributes": [
-                                "timestamp" : LocalDateTime.now().plusDays(1),
+                                "timestamp" : '2017-02-06T16:45:36',
                                 "comment"   : "Income transaction",
                                 "tags"      : ["income", "transaction"],
                                 "operations": [
@@ -127,7 +127,7 @@ class TransactionFixture {
                 "data": [
                         "type"      : "transaction",
                         "attributes": [
-                                "timestamp" : LocalDateTime.now().plusDays(1),
+                                "timestamp" : '2017-02-06T16:45:36',
                                 "comment"   : "Spend transaction",
                                 "tags"      : ["spend"],
                                 "operations": [
