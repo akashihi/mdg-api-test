@@ -150,7 +150,7 @@ class TransactionSpecification extends Specification {
                 .contentType("application/vnd.mdg+json").
                 when()
                 .request().body(JsonOutput.toJson(transaction))
-                .post("/transaction/{id}", txId)
+                .put("/transaction/{id}", txId)
 
         then: "Transaction object should contain new data"
         then: "Transaction object should be returned"
