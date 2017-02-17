@@ -1,14 +1,20 @@
 package org.akashihi.mdg.apitest.tests
 
+import com.jayway.jsonpath.JsonPath
 import org.akashihi.mdg.apitest.fixtures.TransactionFixture
 import spock.lang.*
 
 import static io.restassured.RestAssured.*
+import static org.akashihi.mdg.apitest.apiConnectionBase.setupAPI
 import static org.hamcrest.Matchers.*
 import static org.junit.Assert.assertThat
 
 class TransactionFilterSpecification extends Specification {
-    TransactionFixture f;
+    TransactionFixture f = new TransactionFixture();
+
+    def setupSpec() {
+        setupAPI();
+    }
 
     def "User sorts transaction on timestamp descending"() {
         given: "Several transactions with different dates"
@@ -16,16 +22,17 @@ class TransactionFilterSpecification extends Specification {
 
         when: "Transaction list sorted by timestamp requested"
         def response = given()
-                .pathParam("sort", "timestamp")
+                .queryParam("sort", "timestamp")
                 .contentType("application/vnd.mdg+json").
                 when()
                 .get("/transaction")
 
         then: "Every timestamp in returned list should be equal or less then previous"
-        def ts = response.then()
+        def body = JsonPath.parse(response.then()
                 .assertThat().statusCode(200)
                 .assertThat().contentType("application/vnd.mdg+json")
-        .extract().path("data[*].attributes.timestamp")
+                .extract().asString())
+        def ts = body.read("data[*].attributes.timestamp", List.class)
         def current = ts.first()
         ts.each{ x ->
             assertThat(x, lessThanOrEqualTo(current))
@@ -39,7 +46,7 @@ class TransactionFilterSpecification extends Specification {
 
         when: "Transaction list sorted by timestamp requested"
         def response = given()
-                .pathParam("sort", "-timestamp")
+                .queryParam("sort", "-timestamp")
                 .contentType("application/vnd.mdg+json").
                 when()
                 .get("/transaction")
@@ -62,17 +69,18 @@ class TransactionFilterSpecification extends Specification {
 
         when: "Transaction list sorted by timestamp requested"
         def response = given()
-                .pathParam("filter", "{'comment' 'income'} ")
+                .queryParam("filter", "{\"comment\": \"Income transaction\"} ")
                 .contentType("application/vnd.mdg+json").
                 when()
                 .get("/transaction")
 
         then: "Should only return transactions, matching filter"
-        response.then()
+        def body = JsonPath.parse(response.then()
                 .assertThat().statusCode(200)
                 .assertThat().contentType("application/vnd.mdg+json")
-                .body("data[?(@.attributes.comment == 'Income transaction')].length()", greaterThan(0))
-                .body("data[?@.attributes.comment != 'Income transaction')].length()", is(0))
+                .extract().asString())
+        assertThat(body.read("data[?(@.attributes.comment == 'Income transaction')]", List.class), not(empty()))
+        assertThat(body.read("data[?(@.attributes.comment != 'Income transaction')]", List.class), empty())
     }
 
     def "User filters transaction by tag"() {
@@ -81,17 +89,18 @@ class TransactionFilterSpecification extends Specification {
 
         when: "Transaction list sorted by timestamp requested"
         def response = given()
-                .pathParam("filter", "{'tags' ['transaction']} ")
+                .queryParam("filter", "{\"tag\": [\"transaction\"]} ")
                 .contentType("application/vnd.mdg+json").
                 when()
                 .get("/transaction")
 
         then: "Should only return transactions, matching filter"
-        response.then()
+        def body = JsonPath.parse(response.then()
                 .assertThat().statusCode(200)
                 .assertThat().contentType("application/vnd.mdg+json")
-                .body("data[?(@.attributes.comment == 'Income transaction')].length()", greaterThan(0))
-                .body("data[?(@.attributes.comment == 'Test transaction')].length()", greaterThan(0))
-                .body("data[?@.attributes.comment == 'Spend transaction')].length()", is(0))
+                .extract().asString())
+        assertThat(body.read("data[?(@.attributes.comment == 'Income transaction')]", List.class), not(empty()))
+        assertThat(body.read("data[?(@.attributes.comment == 'Test transaction')]", List.class), not(empty()))
+        assertThat(body.read("data[?(@.attributes.comment == 'Spend transaction')]", List.class), empty())
     }
 }
