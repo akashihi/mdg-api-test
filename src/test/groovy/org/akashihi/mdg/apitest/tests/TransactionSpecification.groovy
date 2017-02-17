@@ -5,8 +5,6 @@ import groovy.json.JsonOutput
 import org.akashihi.mdg.apitest.fixtures.TransactionFixture
 import spock.lang.*
 
-import java.time.LocalDateTime
-
 import static io.restassured.RestAssured.*
 import static org.akashihi.mdg.apitest.apiConnectionBase.setupAPI
 import static org.hamcrest.Matchers.*
@@ -153,7 +151,6 @@ class TransactionSpecification extends Specification {
                 .put("/transaction/{id}", txId)
 
         then: "Transaction object should contain new data"
-        then: "Transaction object should be returned"
         given()
                 .contentType("application/vnd.mdg+json").
                 when()
