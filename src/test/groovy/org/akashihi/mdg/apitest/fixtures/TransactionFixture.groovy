@@ -73,7 +73,7 @@ class TransactionFixture {
                 "data": [
                         "type"      : "transaction",
                         "attributes": [
-                                "timestamp" : "2017-02-05T16:45:36",
+                                "timestamp" : "2017-02-04T16:45:36",
                                 "comment"   : "Test transaction",
                                 "tags"      : ["test", "transaction"],
                                 "operations": [
@@ -102,7 +102,7 @@ class TransactionFixture {
                 "data": [
                         "type"      : "transaction",
                         "attributes": [
-                                "timestamp" : '2017-02-06T16:45:36',
+                                "timestamp" : '2017-02-05T16:45:36',
                                 "comment"   : "Income transaction",
                                 "tags"      : ["income", "transaction"],
                                 "operations": [
