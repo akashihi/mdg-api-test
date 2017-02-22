@@ -1,6 +1,7 @@
 package org.akashihi.mdg.apitest.tests
 
 import com.jayway.jsonpath.JsonPath
+import groovy.json.JsonOutput
 import org.akashihi.mdg.apitest.fixtures.TransactionFixture
 import spock.lang.*
 
@@ -52,10 +53,11 @@ class TransactionFilterSpecification extends Specification {
                 .get("/transaction")
 
         then: "Every timestamp in returned list should be equal or less then previous"
-        def ts = response.then()
+        def body = JsonPath.parse(response.then()
                 .assertThat().statusCode(200)
                 .assertThat().contentType("application/vnd.mdg+json")
-                .extract().path("data[*].attributes.timestamp")
+                .extract().asString())
+        def ts = body.read("data[*].attributes.timestamp", List.class)
         def current = ts.first()
         ts.each{ x ->
             assertThat(x, greaterThanOrEqualTo(current))
@@ -102,5 +104,58 @@ class TransactionFilterSpecification extends Specification {
         assertThat(body.read("data[?(@.attributes.comment == 'Income transaction')]", List.class), not(empty()))
         assertThat(body.read("data[?(@.attributes.comment == 'Test transaction')]", List.class), not(empty()))
         assertThat(body.read("data[?(@.attributes.comment == 'Spend transaction')]", List.class), empty())
+    }
+
+    def "User filters transaction by account"() {
+        given: "Several accounts and transaction on them"
+        def accounts = f.prepareAccounts()
+        def transaction = [
+                "data": [
+                        "type"      : "transaction",
+                        "attributes": [
+                                "timestamp" : '2017-02-05T16:45:36',
+                                "comment"   : "Test transaction",
+                                "tags"      : ["test", "transaction"],
+                                "operations": [
+                                        [
+                                                "account_id": accounts["income"],
+                                                "amount"    : -150
+                                        ],
+                                        [
+                                                "account_id": accounts["asset"],
+                                                "amount"    : 50
+                                        ],
+                                        [
+                                                "account_id": accounts["expense"],
+                                                "amount"    : 100
+                                        ]
+                                ]
+                        ]
+                ]
+        ]
+        given()
+                .contentType("application/vnd.mdg+json").
+                when()
+                .request().body(JsonOutput.toJson(transaction))
+                .post("/transaction").
+                then()
+                .assertThat().statusCode(201)
+                .assertThat().contentType("application/vnd.mdg+json")
+
+
+        when: "Transaction is filtered by account_id"
+        def asset_account_id = accounts["asset"]
+        def response = given()
+                .queryParam("filter", "{\"account_id\": [${asset_account_id}]} ")
+                .contentType("application/vnd.mdg+json").
+                when()
+                .get("/transaction")
+
+        then: "Should only return transactions, matching filter"
+        def body = JsonPath.parse(response.then()
+                .assertThat().statusCode(200)
+                .assertThat().contentType("application/vnd.mdg+json")
+                .extract().asString())
+        assertThat(body.read("data", List.class).size(), is(1)) //As we use new accounts for each test, there should be only one matching transaction
     }
 }
