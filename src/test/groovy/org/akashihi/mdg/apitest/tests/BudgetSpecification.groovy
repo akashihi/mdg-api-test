@@ -48,7 +48,7 @@ class BudgetSpecification extends Specification {
         def listResponse = given()
                 .contentType("application/vnd.mdg+json").
                 when()
-                .get("/febBudget")
+                .get("/budget")
         def listBody =  JsonPath.parse(listResponse.then()
                 .assertThat().statusCode(200)
                 .assertThat().contentType("application/vnd.mdg+json")

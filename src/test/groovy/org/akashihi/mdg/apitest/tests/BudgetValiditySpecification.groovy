@@ -1,6 +1,7 @@
 package org.akashihi.mdg.apitest.tests
 
 import groovy.json.JsonOutput
+import org.akashihi.mdg.apitest.fixtures.BudgetFixture
 import spock.lang.Specification
 
 import static io.restassured.RestAssured.given
@@ -8,28 +9,11 @@ import static org.akashihi.mdg.apitest.apiConnectionBase.setupAPI
 import static org.hamcrest.Matchers.equalTo
 
 class BudgetValiditySpecification extends Specification {
-
-    def febBudget = [
-            "data": [
-                    "type"      : "buget",
-                    "attributes": [
-                            "term_beginning" : '2017-02-01',
-                            "term_end" : '2017-02-28',
-                    ]
-            ]
-    ]
-
-    def makeBudget() {
-        given()
-                .contentType("application/vnd.mdg+json").
-                when()
-                .request().body(JsonOutput.toJson(febBudget))
-                .post("/budget")
-    }
+    static BudgetFixture fixture = new BudgetFixture();
 
     def setupSpec() {
         setupAPI();
-        makeBudget();
+        fixture.makeBudget(fixture.febBudget);
     }
 
     def "Budget validity period is less then two days"() {
