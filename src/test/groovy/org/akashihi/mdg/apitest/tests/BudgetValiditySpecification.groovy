@@ -41,7 +41,7 @@ class BudgetValiditySpecification extends Specification {
         response.then()
             .assertThat().statusCode(412)
                 .assertThat().contentType("application/vnd.mdg+json")
-                .body("errors[0].code", equalTo("BUDGET_TOO_SHORT"))
+                .body("errors[0].code", equalTo("BUDGET_SHORT_RANGE"))
     }
 
     def "Budget should become effective before it expires"() {

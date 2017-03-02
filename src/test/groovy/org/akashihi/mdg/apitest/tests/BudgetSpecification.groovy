@@ -14,16 +14,16 @@ class BudgetSpecification extends Specification {
         setupAPI();
     }
 
-    def "User creates new transaction"() {
-        given: "Brand new febBudget"
+    def "User creates new budget"() {
+        given: "Brand new budget"
 
-        when: "New transaction is submitted to the system"
+        when: "New budget is submitted to the system"
         def budget = [
                 "data": [
                         "type"      : "buget",
                         "attributes": [
                                 "term_beginning" : '2017-02-05',
-                                "term_end" : '2017-02-05',
+                                "term_end" : '2017-02-06',
                         ]
                 ]
         ]
@@ -31,20 +31,20 @@ class BudgetSpecification extends Specification {
                 .contentType("application/vnd.mdg+json").
                 when()
                 .request().body(JsonOutput.toJson(budget))
-                .post("/febBudget")
+                .post("/budget")
         def body = JsonPath.parse(response.
                 then()
                 .assertThat().statusCode(201)
                 .assertThat().contentType("application/vnd.mdg+json")
-                .assertThat().header("Location", containsString("/api/febBudget/20170205"))
+                .assertThat().header("Location", containsString("/api/budget/20170205"))
                 .extract().asString())
 
-        assertThat(body.read("data.type"), equalTo("febBudget"))
+        assertThat(body.read("data.type"), equalTo("budget"))
         assertThat(body.read("data.attributes.term_beginning"), equalTo("2017-02-05"))
         assertThat(body.read("data.attributes.term_end"), equalTo("2017-02-06"))
         def bId =response.then().extract().path("data.id")
 
-        then: "Budget appears on febBudget list"
+        then: "Budget appears on budget list"
         def listResponse = given()
                 .contentType("application/vnd.mdg+json").
                 when()
@@ -54,7 +54,7 @@ class BudgetSpecification extends Specification {
                 .assertThat().contentType("application/vnd.mdg+json")
                 .extract().asString())
         assertThat(listBody.read("data", List.class).size(), is(not(0)))
-        assertThat(listBody.read("data[?(@.id == ${bId})].type", List.class).first(), equalTo("febBudget"))
+        assertThat(listBody.read("data[?(@.id == ${bId})].type", List.class).first(), equalTo("budget"))
         assertThat(listBody.read("data[?(@.id == ${bId})].attributes.term_beginning", List.class).first(), equalTo("2017-02-05"))
         assertThat(listBody.read("data[?(@.id == ${bId})].attributes.term_end", List.class).first(), equalTo("2017-02-06"))
     }
