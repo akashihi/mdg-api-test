@@ -22,7 +22,7 @@ class BudgetSpecification extends Specification {
                 "data": [
                         "type"      : "buget",
                         "attributes": [
-                                "term_beginning" : '2017-02-05',
+                                "term_beginning" : '2017-02-04',
                                 "term_end" : '2017-02-06',
                         ]
                 ]
@@ -36,11 +36,11 @@ class BudgetSpecification extends Specification {
                 then()
                 .assertThat().statusCode(201)
                 .assertThat().contentType("application/vnd.mdg+json")
-                .assertThat().header("Location", containsString("/api/budget/20170205"))
+                .assertThat().header("Location", containsString("/api/budget/20170204"))
                 .extract().asString())
 
         assertThat(body.read("data.type"), equalTo("budget"))
-        assertThat(body.read("data.attributes.term_beginning"), equalTo("2017-02-05"))
+        assertThat(body.read("data.attributes.term_beginning"), equalTo("2017-02-04"))
         assertThat(body.read("data.attributes.term_end"), equalTo("2017-02-06"))
         def bId =response.then().extract().path("data.id")
 
@@ -55,7 +55,7 @@ class BudgetSpecification extends Specification {
                 .extract().asString())
         assertThat(listBody.read("data", List.class).size(), is(not(0)))
         assertThat(listBody.read("data[?(@.id == ${bId})].type", List.class).first(), equalTo("budget"))
-        assertThat(listBody.read("data[?(@.id == ${bId})].attributes.term_beginning", List.class).first(), equalTo("2017-02-05"))
+        assertThat(listBody.read("data[?(@.id == ${bId})].attributes.term_beginning", List.class).first(), equalTo("2017-02-04"))
         assertThat(listBody.read("data[?(@.id == ${bId})].attributes.term_end", List.class).first(), equalTo("2017-02-06"))
     }
 
