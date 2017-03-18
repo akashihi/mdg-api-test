@@ -60,13 +60,13 @@ class BudgetSpecification extends Specification {
     }
 
     def "User checks budget data"() {
-        given: "Brand new febBudget"
+        given: "Brand new budget"
         def budget = [
                 "data": [
-                        "type"      : "buget",
+                        "type"      : "budget",
                         "attributes": [
                                 "term_beginning" : '2017-02-07',
-                                "term_end" : '2017-02-08',
+                                "term_end" : '2017-02-09',
                         ]
                 ]
         ]
@@ -75,22 +75,22 @@ class BudgetSpecification extends Specification {
                 .contentType("application/vnd.mdg+json").
                 when()
                 .request().body(JsonOutput.toJson(budget))
-                .post("/febBudget")
+                .post("/budget")
 
         when: "Budget is requested by specifying it's data"
         def response = given()
                 .contentType("application/vnd.mdg+json").
                 when()
-                .get("/febBudget/{id}", "20170208")
+                .get("/budget/{id}", "20170208")
 
 
         then: "Budget data should be returned"
         response.then()
                 .assertThat().statusCode(200)
                 .assertThat().contentType("application/vnd.mdg+json")
-                .body("data.type", equalTo("febBudget"))
+                .body("data.type", equalTo("budget"))
                 .body("data.attributes.term_beginning", equalTo("2017-02-07"))
-                .body("data.attributes.term_end", equalTo("2017-02-08"))
+                .body("data.attributes.term_end", equalTo("2017-02-09"))
     }
 
     def "User deletes budget"() {
@@ -99,8 +99,8 @@ class BudgetSpecification extends Specification {
                 "data": [
                         "type"      : "buget",
                         "attributes": [
-                                "term_beginning" : '2017-02-09',
-                                "term_end" : '2017-02-10',
+                                "term_beginning" : '2017-02-10',
+                                "term_end" : '2017-02-12',
                         ]
                 ]
         ]
@@ -109,27 +109,27 @@ class BudgetSpecification extends Specification {
                 .contentType("application/vnd.mdg+json").
                 when()
                 .request().body(JsonOutput.toJson(budget))
-                .post("/febBudget")
+                .post("/budget")
 
         when: "Budget is deleted"
         given()
                 .contentType("application/vnd.mdg+json").
                 when()
-                .delete("/febBudget/{id}", "20170209")
+                .delete("/budget/{id}", "20170210")
                 .then()
                 .assertThat().statusCode(204)
 
 
-        then: "it should disappear from febBudget list"
+        then: "it should disappear from budget list"
         def response = given()
                 .contentType("application/vnd.mdg+json").
                 when()
-                .get("/febBudget")
+                .get("/budget")
         def body = JsonPath.parse(response.then()
                 .assertThat().statusCode(200)
                 .assertThat().contentType("application/vnd.mdg+json")
                 .extract().asString())
 
-        assertThat(body.read("data[?(@.id == '20170509)]", List.class), empty())
+        assertThat(body.read("data[?(@.id == '20170210')]", List.class), empty())
     }
 }
