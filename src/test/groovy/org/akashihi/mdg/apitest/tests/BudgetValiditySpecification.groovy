@@ -76,10 +76,10 @@ class BudgetValiditySpecification extends Specification {
         given: "Two overlapping budgets"
         def overlap = [
                 "data": [
-                        "type"      : "buget",
+                        "type"      : "budget",
                         "attributes": [
-                                "term_beginning" : '2017-02-12',
-                                "term_end" : '2017-02-14',
+                                "term_beginning" : '2017-02-14',
+                                "term_end" : '2017-02-17',
                         ]
                 ]
         ]
@@ -90,7 +90,7 @@ class BudgetValiditySpecification extends Specification {
                 .contentType("application/vnd.mdg+json").
                 when()
                 .request().body(JsonOutput.toJson(overlap))
-                .post("/febBudget")
+                .post("/budget")
 
 
         then: "It should not be accepted"
@@ -104,9 +104,9 @@ class BudgetValiditySpecification extends Specification {
         given: "Two overlapping budgets"
         def overlap = [
                 "data": [
-                        "type"      : "buget",
+                        "type"      : "bubget",
                         "attributes": [
-                                "term_beginning" : '2017-02-12',
+                                "term_beginning" : '2017-02-14',
                                 "term_end" : '2017-03-14',
                         ]
                 ]
@@ -118,7 +118,7 @@ class BudgetValiditySpecification extends Specification {
                 .contentType("application/vnd.mdg+json").
                 when()
                 .request().body(JsonOutput.toJson(overlap))
-                .post("/febBudget")
+                .post("/budget")
 
 
         then: "It should not be accepted"
@@ -132,9 +132,9 @@ class BudgetValiditySpecification extends Specification {
         given: "Two overlapping budgets"
         def overlap = [
                 "data": [
-                        "type"      : "buget",
+                        "type"      : "budget",
                         "attributes": [
-                                "term_beginning" : '2017-01-12',
+                                "term_beginning" : '2017-01-14',
                                 "term_end" : '2017-02-14',
                         ]
                 ]
@@ -146,7 +146,7 @@ class BudgetValiditySpecification extends Specification {
                 .contentType("application/vnd.mdg+json").
                 when()
                 .request().body(JsonOutput.toJson(overlap))
-                .post("/febBudget")
+                .post("/budget")
 
 
         then: "It should not be accepted"

@@ -9,7 +9,7 @@ class BudgetFixture {
             "data": [
                     "type"      : "budget",
                     "attributes": [
-                            "term_beginning" : '2017-02-01',
+                            "term_beginning" : '2017-02-13',
                             "term_end" : '2017-02-28',
                     ]
             ]
