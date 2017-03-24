@@ -37,7 +37,7 @@ class BudgetFixture {
         given()
                 .contentType("application/vnd.mdg+json").
                 when()
-                .delete("/febBudget/{id}", id)
+                .delete("/budget/{id}", id)
                 .then()
                 .assertThat().statusCode(204)
     }

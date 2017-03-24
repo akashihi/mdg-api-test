@@ -118,7 +118,7 @@ class BudgetEntrySpecification extends Specification {
                 "data": [
                         "type"      : "budgetentry",
                         "attributes": [
-                                "even_distribution" : true,
+                                "even_distribution" : false,
                                 "expected_amount" : 9000,
                         ]
                 ]
@@ -131,7 +131,7 @@ class BudgetEntrySpecification extends Specification {
                 then()
                 .assertThat().statusCode(202)
                 .assertThat().contentType("application/vnd.mdg+json")
-                .body("data.attributes.even_distribution", is(true))
+                .body("data.attributes.even_distribution", is(false))
                 .body("data.attributes.expected_amount", is(9000))
 
         then: "New values should be returned"
@@ -146,6 +146,6 @@ class BudgetEntrySpecification extends Specification {
                 .extract().asString())
 
         assertThat(body.read("data.attributes.expected_amount"), equalTo(9000))
-        assertThat(body.read("data.attributes.even_distribution"), is(true))
+        assertThat(body.read("data.attributes.even_distribution"), is(false))
     }
 }
