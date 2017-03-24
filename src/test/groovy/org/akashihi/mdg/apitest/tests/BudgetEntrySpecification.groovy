@@ -10,6 +10,7 @@ import static io.restassured.RestAssured.given
 import static org.akashihi.mdg.apitest.apiConnectionBase.setupAPI
 import static org.hamcrest.Matchers.*
 import static org.junit.Assert.assertThat
+import static org.junit.Assert.assertTrue
 
 class BudgetEntrySpecification extends Specification {
     static BudgetFixture bFixture = new BudgetFixture();
@@ -35,14 +36,17 @@ class BudgetEntrySpecification extends Specification {
                 when()
                 .get("/budget/20170301/entry")
 
-        then: 'BudgetEntries for non-asset accounts hould be in the list'
+        then: 'BudgetEntries for non-asset accounts should be in the list'
         def listBody =  JsonPath.parse(listResponse.then()
                 .assertThat().statusCode(200)
                 .assertThat().contentType("application/vnd.mdg+json")
                 .extract().asString())
         assertThat(listBody.read("data", List.class).size(), is(not(0)))
         assertThat(listBody.read("data.*.type", List.class).first(), equalTo("budgetentry"))
-        assertThat(listBody.read("data.*.attributes.account_id", List.class), containsInAnyOrder(accounts.valueSet()))
+
+        def accs = listBody.read("data.*.attributes.account_id").collect()
+        assertTrue(accs.contains(accounts["income"].intValue()))
+        assertTrue(accs.contains(accounts["expense"].intValue()))
     }
 
     def 'Budget entries are created in existing budget when new account is created'() {
@@ -62,7 +66,11 @@ class BudgetEntrySpecification extends Specification {
                 .extract().asString())
         assertThat(listBody.read("data", List.class).size(), is(not(0)))
         assertThat(listBody.read("data.*.type", List.class).first(), equalTo("budgetentry"))
-        assertThat(listBody.read("data.*.attributes.account_id", List.class), containsInAnyOrder(newAccounts.valueSet()))
+
+        def accs = listBody.read("data.*.attributes.account_id").collect()
+        assertTrue(accs.contains(accounts["income"].intValue()))
+        assertTrue(accs.contains(accounts["expense"].intValue()))
+
     }
 
     def 'Budget entries should be accessible by id'() {
