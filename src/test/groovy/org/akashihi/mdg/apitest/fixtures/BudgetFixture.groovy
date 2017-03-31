@@ -25,6 +25,16 @@ class BudgetFixture {
             ]
     ]
 
+    def aprBudget = [
+            "data": [
+                    "type"      : "budget",
+                    "attributes": [
+                            "term_beginning" : '2017-04-01',
+                            "term_end" : '2017-04-30',
+                    ]
+            ]
+    ]
+
     def makeBudget(budget) {
         given()
                 .contentType("application/vnd.mdg+json").
