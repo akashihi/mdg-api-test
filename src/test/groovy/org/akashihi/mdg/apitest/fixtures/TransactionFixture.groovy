@@ -55,7 +55,7 @@ class TransactionFixture {
         ["income": Long.valueOf(makeAccount(accountIncome)), "asset": Long.valueOf(makeAccount(accountAsset)), "expense": Long.valueOf(makeAccount(accountExpense))]
     }
 
-    private static def makeTransaction(transaction) {
+    public def makeTransaction(transaction) {
         given()
                 .contentType("application/vnd.mdg+json").
                 when()

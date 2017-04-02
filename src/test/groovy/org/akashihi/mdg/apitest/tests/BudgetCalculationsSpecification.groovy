@@ -9,8 +9,6 @@ import spock.lang.Specification
 import static io.restassured.RestAssured.given
 import static org.akashihi.mdg.apitest.apiConnectionBase.setupAPI
 import static org.hamcrest.Matchers.equalTo
-import static org.hamcrest.Matchers.is
-import static org.hamcrest.Matchers.is
 import static org.junit.Assert.assertThat
 
 class BudgetCalculationsSpecification extends Specification {
