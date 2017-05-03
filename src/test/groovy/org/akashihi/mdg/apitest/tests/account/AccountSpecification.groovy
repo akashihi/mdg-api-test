@@ -1,4 +1,4 @@
-package org.akashihi.mdg.apitest.tests
+package org.akashihi.mdg.apitest.tests.account
 
 import com.jayway.jsonpath.JsonPath
 import groovy.json.JsonOutput

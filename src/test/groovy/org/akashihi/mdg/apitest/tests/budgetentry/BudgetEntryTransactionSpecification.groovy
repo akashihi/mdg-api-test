@@ -1,4 +1,4 @@
-package org.akashihi.mdg.apitest.tests
+package org.akashihi.mdg.apitest.tests.budgetentry
 
 import com.jayway.jsonpath.JsonPath
 import groovy.json.JsonOutput
@@ -12,7 +12,7 @@ import static org.akashihi.mdg.apitest.apiConnectionBase.setupAPI
 import static org.hamcrest.Matchers.equalTo
 import static org.junit.Assert.assertThat
 
-class BudgetTransactionSpecification extends Specification {
+class BudgetEntryTransactionSpecification extends Specification {
     static BudgetFixture bFixture = new BudgetFixture();
     static TransactionFixture tFixture = new TransactionFixture();
     static def accounts;
@@ -54,17 +54,18 @@ class BudgetTransactionSpecification extends Specification {
         bFixture.removeBudget("20170401")
     }
 
-    def 'Budget actual amount should change when transaction is submitted'() {
-        given: 'An new budget'
-        def budgetResponse = given()
+    def 'BudgetEntry actual amount should change when transaction is submitted'() {
+        given: 'An new budget entry'
+        def listResponse = given()
                 .contentType("application/vnd.mdg+json").
                 when()
-                .get("/budget/{id}", "20170401")
-        def budgetBody = JsonPath.parse(budgetResponse.then()
+                .get("/budget/20170401/entry")
+        def listBody =  JsonPath.parse(listResponse.then()
                 .assertThat().statusCode(200)
                 .assertThat().contentType("application/vnd.mdg+json")
                 .extract().asString())
-        def initialAmount = budgetBody.read("data.attributes.outgoing_amount.actual", BigDecimal.class)
+        def initialIncome = new BigDecimal(listBody.read("data[?(@.attributes.account_id == ${accounts['income']})].attributes.actual_amount").first())
+        def initialExpense = new BigDecimal(listBody.read("data[?(@.attributes.account_id == ${accounts['expense']})].attributes.actual_amount").first())
 
         when: "New transaction is submitted"
         tFixture.makeTransaction(transaction)
@@ -73,62 +74,68 @@ class BudgetTransactionSpecification extends Specification {
         def response = given()
                 .contentType("application/vnd.mdg+json").
                 when()
-                .get("/budget/{id}", "20170401")
-        def body = JsonPath.parse(response.then()
+                .get("/budget/20170401/entry")
+        def body =  JsonPath.parse(response.then()
                 .assertThat().statusCode(200)
                 .assertThat().contentType("application/vnd.mdg+json")
                 .extract().asString())
-        def actualAmount = body.read("data.attributes.outgoing_amount.actual", BigDecimal.class)
+        def actualIncome = new BigDecimal(body.read("data[?(@.attributes.account_id == ${accounts['income']})].attributes.actual_amount").first())
+        def actualExpense = new BigDecimal(body.read("data[?(@.attributes.account_id == ${accounts['expense']})].attributes.actual_amount").first())
 
-        assertThat(actualAmount.subtract(initialAmount), equalTo(new BigDecimal(50)))
 
+        assertThat(actualIncome.subtract(initialIncome), equalTo(new BigDecimal(150)))
+        assertThat(actualExpense.subtract(initialExpense), equalTo(new BigDecimal(100)))
     }
 
     def 'Budget actual amount should change when transaction is removed'() {
         given: 'An new budget with some transaction'
         def txId = tFixture.makeTransaction(transaction)
 
-        def budgetResponse = given()
+        def listResponse = given()
                 .contentType("application/vnd.mdg+json").
                 when()
-                .get("/budget/{id}", "20170401")
-        def budgetBody = JsonPath.parse(budgetResponse.then()
+                .get("/budget/20170401/entry")
+        def listBody =  JsonPath.parse(listResponse.then()
                 .assertThat().statusCode(200)
                 .assertThat().contentType("application/vnd.mdg+json")
                 .extract().asString())
-        def initialAmount = budgetBody.read("data.attributes.outgoing_amount.actual", BigDecimal.class)
+        def initialIncome = new BigDecimal(listBody.read("data[?(@.attributes.account_id == ${accounts['income']})].attributes.actual_amount").first())
+        def initialExpense = new BigDecimal(listBody.read("data[?(@.attributes.account_id == ${accounts['expense']})].attributes.actual_amount").first())
 
         when: "Transaction is removed"
         when().delete("/transaction/{id}", txId)
-        .then().assertThat().statusCode(204)
+                .then().assertThat().statusCode(204)
 
 
         then: "Actual amount should change"
         def response = given()
                 .contentType("application/vnd.mdg+json").
                 when()
-                .get("/budget/{id}", "20170401")
-        def body = JsonPath.parse(response.then()
+                .get("/budget/20170401/entry")
+        def body =  JsonPath.parse(response.then()
                 .assertThat().statusCode(200)
                 .assertThat().contentType("application/vnd.mdg+json")
                 .extract().asString())
-        def actualAmount = body.read("data.attributes.outgoing_amount.actual", BigDecimal.class)
+        def actualIncome = new BigDecimal(body.read("data[?(@.attributes.account_id == ${accounts['income']})].attributes.actual_amount").first())
+        def actualExpense = new BigDecimal(body.read("data[?(@.attributes.account_id == ${accounts['expense']})].attributes.actual_amount").first())
 
-        assertThat(actualAmount.subtract(initialAmount), equalTo(new BigDecimal(-50)))
+        assertThat(actualIncome.subtract(initialIncome), equalTo(new BigDecimal(-150)))
+        assertThat(actualExpense.subtract(initialExpense), equalTo(new BigDecimal(-100)))
     }
 
     def 'Budget actual amount should change when transaction is edited'() {
         given: 'An new budget with some transaction'
         def txId = tFixture.makeTransaction(transaction)
-        def budgetResponse = given()
+        def listResponse = given()
                 .contentType("application/vnd.mdg+json").
                 when()
-                .get("/budget/{id}", "20170401")
-        def budgetBody = JsonPath.parse(budgetResponse.then()
+                .get("/budget/20170401/entry")
+        def listBody =  JsonPath.parse(listResponse.then()
                 .assertThat().statusCode(200)
                 .assertThat().contentType("application/vnd.mdg+json")
                 .extract().asString())
-        def initialAmount = budgetBody.read("data.attributes.outgoing_amount.actual", BigDecimal.class)
+        def initialIncome = new BigDecimal(listBody.read("data[?(@.attributes.account_id == ${accounts['income']})].attributes.actual_amount").first())
+        def initialExpense = new BigDecimal(listBody.read("data[?(@.attributes.account_id == ${accounts['expense']})].attributes.actual_amount").first())
 
         when: "Transaction is edited"
         def newTx = transaction.clone()
@@ -145,13 +152,16 @@ class BudgetTransactionSpecification extends Specification {
         def response = given()
                 .contentType("application/vnd.mdg+json").
                 when()
-                .get("/budget/{id}", "20170401")
-        def body = JsonPath.parse(response.then()
+                .get("/budget/20170401/entry")
+        def body =  JsonPath.parse(response.then()
                 .assertThat().statusCode(200)
                 .assertThat().contentType("application/vnd.mdg+json")
                 .extract().asString())
-        def actualAmount = body.read("data.attributes.outgoing_amount.actual", BigDecimal.class)
+        def actualIncome = new BigDecimal(body.read("data[?(@.attributes.account_id == ${accounts['income']})].attributes.actual_amount").first())
+        def actualExpense = new BigDecimal(body.read("data[?(@.attributes.account_id == ${accounts['expense']})].attributes.actual_amount").first())
 
-        assertThat(actualAmount.subtract(initialAmount), equalTo(new BigDecimal(50)))
+        assertThat(actualIncome, equalTo(initialIncome))
+        assertThat(actualExpense.subtract(initialExpense), equalTo(new BigDecimal(-50)))
     }
+
 }

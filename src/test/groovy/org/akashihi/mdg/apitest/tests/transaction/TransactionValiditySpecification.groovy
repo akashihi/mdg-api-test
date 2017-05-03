@@ -1,4 +1,4 @@
-package org.akashihi.mdg.apitest.tests
+package org.akashihi.mdg.apitest.tests.transaction
 
 import groovy.json.JsonOutput
 import org.akashihi.mdg.apitest.fixtures.TransactionFixture
