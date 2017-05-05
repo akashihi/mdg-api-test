@@ -85,7 +85,7 @@ class AccountFavOpsSpecification extends Specification {
                 .assertThat().statusCode(200)
                 .assertThat().contentType("application/vnd.mdg+json")
                 .body("data.type", equalTo("account"))
-                .body("data.attributes.account_type", equalTo("expense"))
+                .body("data.attributes.account_type", equalTo("asset"))
                 .body("data.attributes.favorite", equalTo(true))
                 .body("data.attributes.operational", equalTo(true))
     }
@@ -126,8 +126,8 @@ class AccountFavOpsSpecification extends Specification {
                 .assertThat().contentType("application/vnd.mdg+json")
                 .body("data.type", equalTo("account"))
                 .body("data.attributes.account_type", equalTo("asset"))
-                .body("data.attributes.favorite", equalTo(true))
-                .body("data.attributes.operational", equalTo(true))
+                .body("data.attributes.favorite", equalTo(false))
+                .body("data.attributes.operational", equalTo(false))
     }
 
 }
