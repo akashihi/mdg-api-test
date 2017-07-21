@@ -7,7 +7,6 @@ import spock.lang.Specification
 import static io.restassured.RestAssured.given
 import static org.akashihi.mdg.apitest.apiConnectionBase.setupAPI
 import static org.hamcrest.CoreMatchers.hasItems
-import static org.hamcrest.Matchers.arrayContainingInAnyOrder
 import static org.junit.Assert.assertThat
 
 class TagSpecification extends Specification {
