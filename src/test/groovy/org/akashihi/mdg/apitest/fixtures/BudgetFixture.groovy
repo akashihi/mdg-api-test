@@ -5,6 +5,16 @@ import groovy.json.JsonOutput
 import static io.restassured.RestAssured.given
 
 class BudgetFixture {
+    def incomeStateBudget = [
+            "data": [
+                    "type"      : "budget",
+                    "attributes": [
+                            "term_beginning" : '2016-12-01',
+                            "term_end" : '2016-12-31',
+                    ]
+            ]
+    ]
+
     def febBudget = [
             "data": [
                     "type"      : "budget",
