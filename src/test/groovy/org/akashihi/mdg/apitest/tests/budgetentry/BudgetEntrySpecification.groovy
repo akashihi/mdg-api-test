@@ -118,7 +118,6 @@ class BudgetEntrySpecification extends Specification {
                 "data": [
                         "type"      : "budgetentry",
                         "attributes": [
-                                "even_distribution" : false,
                                 "expected_amount" : 9000,
                         ]
                 ]
@@ -131,7 +130,6 @@ class BudgetEntrySpecification extends Specification {
                 then()
                 .assertThat().statusCode(202)
                 .assertThat().contentType("application/vnd.mdg+json")
-                .body("data.attributes.even_distribution", is(false))
                 .body("data.attributes.expected_amount", is(9000))
 
         then: "New values should be returned"
@@ -146,6 +144,53 @@ class BudgetEntrySpecification extends Specification {
                 .extract().asString())
 
         assertThat(body.read("data.attributes.expected_amount"), equalTo(9000))
+    }
+
+    def 'Removing even flasg should also remove proration'() {
+        given: "Some budget entry"
+        def listResponse = given()
+                .contentType("application/vnd.mdg+json").
+                when()
+                .get("/budget/20170301/entry")
+        def listBody =  JsonPath.parse(listResponse.then()
+                .assertThat().statusCode(200)
+                .assertThat().contentType("application/vnd.mdg+json")
+                .extract().asString())
+        def entryId = listBody.read("data.*.id", List.class).first()
+
+        when: "Entry is updated"
+        def newEntry = [
+                "data": [
+                        "type"      : "budgetentry",
+                        "attributes": [
+                                "even_distribution" : false,
+                                "proration": true
+                        ]
+                ]
+        ]
+        given()
+                .contentType("application/vnd.mdg+json")
+                .when()
+                .request().body(JsonOutput.toJson(newEntry))
+                .put("/budget/20170301/entry/{id}", entryId).
+                then()
+                .assertThat().statusCode(202)
+                .assertThat().contentType("application/vnd.mdg+json")
+                .body("data.attributes.even_distribution", is(false))
+                .body("data.attributes.proration", is(false))
+
+        then: "New values should be returned"
+        def response = given()
+                .contentType("application/vnd.mdg+json").
+                when()
+                .get("/budget/20170301/entry/{id}", entryId)
+
+        def body = JsonPath.parse(response.then()
+                .assertThat().statusCode(200)
+                .assertThat().contentType("application/vnd.mdg+json")
+                .extract().asString())
+
         assertThat(body.read("data.attributes.even_distribution"), is(false))
+        assertThat(body.read("data.attributes.proration"), is(false))
     }
 }
