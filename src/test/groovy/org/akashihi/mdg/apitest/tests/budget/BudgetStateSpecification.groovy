@@ -55,11 +55,9 @@ class BudgetStateSpecification extends Specification {
         given()
                 .contentType("application/vnd.mdg+json")
                 .when()
-                .log().all()
                 .request().body(JsonOutput.toJson(["data": entry]))
                 .put("/budget/20161201/entry/{id}", entry.id).
                 then()
-                .log().all()
                 .assertThat().statusCode(202)
 
         then: "Budget expected income should be 3620"
