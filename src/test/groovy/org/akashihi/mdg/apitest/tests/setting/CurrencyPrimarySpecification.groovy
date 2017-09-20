@@ -97,12 +97,10 @@ class CurrencyPrimarySpecification extends Specification {
                 .contentType("application/vnd.mdg+json")
                 .when()
                 .request().body(JsonOutput.toJson(setting))
-                .log().all()
                 .put("/setting/{id}", "currency.primary")
 
         then: "Update should be rejected."
         response.then()
-                .log().all()
                 .assertThat().statusCode(422)
                 .assertThat().contentType("application/vnd.mdg+json")
 
