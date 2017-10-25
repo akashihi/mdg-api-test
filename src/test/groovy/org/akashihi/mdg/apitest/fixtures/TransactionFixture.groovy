@@ -40,6 +40,17 @@ class TransactionFixture {
             ]
     ]
 
+    def accountUsdAsset = [
+            "data": [
+                    "type"      : "account",
+                    "attributes": [
+                            "account_type": "asset",
+                            "currency_id" : 840,
+                            "name"        : "USD current"
+                    ]
+            ]
+    ]
+
     private static def makeAccount(account) {
         given()
                 .contentType("application/vnd.mdg+json").
@@ -52,7 +63,12 @@ class TransactionFixture {
     }
 
     public def prepareAccounts() {
-        ["income": Long.valueOf(makeAccount(accountIncome)), "asset": Long.valueOf(makeAccount(accountAsset)), "expense": Long.valueOf(makeAccount(accountExpense))]
+        [
+                "income": Long.valueOf(makeAccount(accountIncome)),
+                "asset": Long.valueOf(makeAccount(accountAsset)),
+                "usdAsset": Long.valueOf(makeAccount(accountUsdAsset)),
+                "expense": Long.valueOf(makeAccount(accountExpense))
+        ]
     }
 
     public def makeTransaction(transaction) {
