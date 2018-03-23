@@ -16,7 +16,7 @@ class CurrencyPrimarySpecification extends Specification {
                     "type"      : "setting",
                     "id"        : "currency.primary",
                     "attributes": [
-                            "value" : "978"
+                            "value" : "840"
                     ]
             ]
     ]
