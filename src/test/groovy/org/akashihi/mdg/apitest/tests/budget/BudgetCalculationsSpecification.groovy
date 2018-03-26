@@ -8,24 +8,71 @@ import spock.lang.Specification
 
 import static io.restassured.RestAssured.given
 import static org.akashihi.mdg.apitest.apiConnectionBase.setupAPI
+import static org.hamcrest.Matchers.closeTo
 import static org.hamcrest.Matchers.equalTo
+import static org.hamcrest.Matchers.is
+import static org.hamcrest.Matchers.is
+import static org.hamcrest.Matchers.is
+import static org.hamcrest.Matchers.is
 import static org.junit.Assert.assertThat
 
 class BudgetCalculationsSpecification extends Specification {
 
     static BudgetFixture bFixture = new BudgetFixture();
     static TransactionFixture tFixture = new TransactionFixture();
-    static def accounts;
+    static def accounts
+    static def primaryCurrency
+    static def rateMap = [:]
 
 
     def setupSpec() {
-        setupAPI();
-        accounts = tFixture.prepareAccounts();
-        bFixture.makeBudget(bFixture.aprBudget);
+        setupAPI()
+
+        primaryCurrency = JsonPath.parse(given()
+                .contentType("application/vnd.mdg+json").
+                when()
+                .get("/setting/{id}", "currency.primary")
+                .then()
+                .assertThat().statusCode(200)
+                .assertThat().contentType("application/vnd.mdg+json")
+                .extract().asString()).read("data.attributes.value", Long.class)
+
+
+        accounts = tFixture.prepareAccounts()
+        bFixture.makeBudget(bFixture.aprBudget)
     }
 
     def cleanupSpec() {
         bFixture.removeBudget("20170401")
+    }
+
+    private applyRate(value, currency) {
+        if ( !rateMap.containsKey(currency)) {
+            def rate = JsonPath.parse(given()
+                    .contentType("application/vnd.mdg+json").
+                    when()
+                    .get("/rate/{ts}/{from}/{to}", "2017-04-01T13:29:00", currency, primaryCurrency)
+                    .then()
+                    .assertThat().statusCode(200)
+                    .assertThat().contentType("application/vnd.mdg+json")
+                    .extract().asString())
+                    .read("data.attributes.rate", BigDecimal.class)
+            rateMap[currency]=rate
+        }
+
+        return value.multiply(rateMap[currency])
+    }
+
+    private getCurrencyForAccount(account_id) {
+        return JsonPath.parse(given()
+                .contentType("application/vnd.mdg+json").
+                when()
+                .get("/account")
+                .then()
+                .assertThat().statusCode(200)
+                .assertThat().contentType("application/vnd.mdg+json")
+                .extract().asString()).read("data[?(@.id == ${account_id})].attributes.currency_id", List.class).first()
+
     }
 
     def 'Budget incoming amount should be sum of all asset accounts before budget term'() {
@@ -55,7 +102,9 @@ class BudgetCalculationsSpecification extends Specification {
         ops.each{ x ->
             x.each { op ->
                 if (assetAccountIds.contains(op['account_id'])) {
-                    incomingAmount = incomingAmount.add(new BigDecimal(op['amount']))
+                    def opAmount = new BigDecimal(op['amount'])
+                    opAmount = applyRate(opAmount, getCurrencyForAccount(op['account_id']))
+                    incomingAmount = incomingAmount.add(opAmount)
                 }
             }
         }
@@ -75,7 +124,7 @@ class BudgetCalculationsSpecification extends Specification {
                 .extract().asString())
         def actualAmount = body.read("data.attributes.incoming_amount", BigDecimal.class)
 
-        assertThat(actualAmount, equalTo(incomingAmount))
+        assertThat(actualAmount.compareTo(incomingAmount), is(0))
     }
 
     def 'Budget expected amount should be sum of all asset accounts after budget term'() {
@@ -144,6 +193,7 @@ class BudgetCalculationsSpecification extends Specification {
                 .assertThat().contentType("application/vnd.mdg+json")
                 .extract().asString())
         def entryAmount = entryBody.read("data.attributes.expected_amount")
+        def entryAccount = entryBody.read("data.attributes.account_id")
         def newAmount = new BigDecimal(entryAmount).add(9000)
 
 
@@ -175,6 +225,8 @@ class BudgetCalculationsSpecification extends Specification {
                 .extract().asString())
         def updatedAmount = updatedBody.read("data.attributes.outgoing_amount.expected")
 
-        assertThat(new BigDecimal(updatedAmount).subtract(new BigDecimal(expectedAmount)).abs(), equalTo(new BigDecimal(9000)))
+        def expectedDifference = applyRate(9000, getCurrencyForAccount(entryAccount))
+
+        assertThat(new BigDecimal(updatedAmount).subtract(new BigDecimal(expectedAmount)).abs(), closeTo(new BigDecimal(expectedDifference), 0.001))
     }
 }

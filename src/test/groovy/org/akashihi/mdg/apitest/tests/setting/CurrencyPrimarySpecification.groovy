@@ -72,7 +72,7 @@ class CurrencyPrimarySpecification extends Specification {
                 then()
                 .assertThat().statusCode(202)
                 .assertThat().contentType("application/vnd.mdg+json")
-                .body("data.attributes.value", equalTo("978"))
+                .body("data.attributes.value", equalTo("840"))
 
         then: "modified data will be retrieved on request"
         given()
@@ -83,7 +83,7 @@ class CurrencyPrimarySpecification extends Specification {
                 .assertThat().statusCode(200)
                 .assertThat().contentType("application/vnd.mdg+json")
                 .body("data.type", equalTo("setting"))
-                .body("data.attributes.value", equalTo("978"))
+                .body("data.attributes.value", equalTo("840"))
 
     }
 
