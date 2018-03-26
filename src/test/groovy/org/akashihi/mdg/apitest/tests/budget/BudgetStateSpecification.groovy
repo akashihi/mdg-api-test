@@ -4,6 +4,7 @@ import com.jayway.jsonpath.JsonPath
 import groovy.json.JsonOutput
 import org.akashihi.mdg.apitest.fixtures.BudgetFixture
 import org.akashihi.mdg.apitest.fixtures.TransactionFixture
+import org.akashihi.mdg.apitest.util.RateConversion
 import spock.lang.Specification
 
 import static io.restassured.RestAssured.given
@@ -12,15 +13,16 @@ import static org.hamcrest.Matchers.equalTo
 import static org.junit.Assert.assertThat
 
 class BudgetStateSpecification extends Specification {
-    static BudgetFixture bFixture = new BudgetFixture();
-    static TransactionFixture tFixture = new TransactionFixture();
-    static def accounts;
-
+    static BudgetFixture bFixture = new BudgetFixture()
+    static TransactionFixture tFixture = new TransactionFixture()
+    static def accounts
+    static def rateConverter
 
     def setupSpec() {
-        setupAPI();
-        accounts = tFixture.prepareAccounts();
-        bFixture.makeBudget(bFixture.incomeStateBudget);
+        setupAPI()
+        rateConverter = new RateConversion()
+        accounts = tFixture.prepareAccounts()
+        bFixture.makeBudget(bFixture.incomeStateBudget)
     }
 
     def cleanupSpec() {
@@ -71,7 +73,9 @@ class BudgetStateSpecification extends Specification {
                 .extract().asString())
         def updatedAmount = updatedBody.read("data.attributes.state.income.expected")
 
-        assertThat(new BigDecimal(updatedAmount), equalTo(new BigDecimal(3620)))
+        def expected = rateConverter.applyRate(3620, rateConverter.getCurrencyForAccount(accountId))
+
+        assertThat(new BigDecimal(updatedAmount), equalTo(new BigDecimal(expected)))
     }
 
     def 'Budget actual income should follow income transactions'() {
@@ -121,7 +125,9 @@ class BudgetStateSpecification extends Specification {
                 .extract().asString())
         def updatedAmount = updatedBody.read("data.attributes.state.income.actual")
 
-        assertThat(new BigDecimal(updatedAmount), equalTo(new BigDecimal(9000)))
+        def expected = rateConverter.applyRate(9000, rateConverter.getCurrencyForAccount(accounts["income"]))
+
+        assertThat(new BigDecimal(updatedAmount), equalTo(new BigDecimal(expected)))
     }
 
     def 'Budget expected expenses should follow entries expected spendings'() {
@@ -168,7 +174,9 @@ class BudgetStateSpecification extends Specification {
                 .extract().asString())
         def updatedAmount = updatedBody.read("data.attributes.state.expense.expected")
 
-        assertThat(new BigDecimal(updatedAmount), equalTo(new BigDecimal(1924)))
+        def expected = rateConverter.applyRate(1924, rateConverter.getCurrencyForAccount(accountId))
+
+        assertThat(new BigDecimal(updatedAmount), equalTo(new BigDecimal(expected)))
     }
 
     def 'Budget actual spendings should follow income transactions'() {
@@ -218,6 +226,8 @@ class BudgetStateSpecification extends Specification {
                 .extract().asString())
         def updatedAmount = updatedBody.read("data.attributes.state.expense.actual")
 
-        assertThat(new BigDecimal(updatedAmount), equalTo(new BigDecimal(9000)))
+        def expected = rateConverter.applyRate(9000, rateConverter.getCurrencyForAccount(accounts["expense"]))
+
+        assertThat(new BigDecimal(updatedAmount), equalTo(new BigDecimal(expected)))
     }
 }

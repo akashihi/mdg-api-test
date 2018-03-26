@@ -4,6 +4,7 @@ import com.jayway.jsonpath.JsonPath
 import groovy.json.JsonOutput
 import org.akashihi.mdg.apitest.fixtures.BudgetFixture
 import org.akashihi.mdg.apitest.fixtures.TransactionFixture
+import org.akashihi.mdg.apitest.util.RateConversion
 import spock.lang.Specification
 
 import static io.restassured.RestAssured.given
@@ -21,22 +22,13 @@ class BudgetCalculationsSpecification extends Specification {
     static BudgetFixture bFixture = new BudgetFixture();
     static TransactionFixture tFixture = new TransactionFixture();
     static def accounts
-    static def primaryCurrency
-    static def rateMap = [:]
+    static def rateConverter
 
 
     def setupSpec() {
         setupAPI()
 
-        primaryCurrency = JsonPath.parse(given()
-                .contentType("application/vnd.mdg+json").
-                when()
-                .get("/setting/{id}", "currency.primary")
-                .then()
-                .assertThat().statusCode(200)
-                .assertThat().contentType("application/vnd.mdg+json")
-                .extract().asString()).read("data.attributes.value", Long.class)
-
+        rateConverter = new RateConversion();
 
         accounts = tFixture.prepareAccounts()
         bFixture.makeBudget(bFixture.aprBudget)
@@ -46,34 +38,6 @@ class BudgetCalculationsSpecification extends Specification {
         bFixture.removeBudget("20170401")
     }
 
-    private applyRate(value, currency) {
-        if ( !rateMap.containsKey(currency)) {
-            def rate = JsonPath.parse(given()
-                    .contentType("application/vnd.mdg+json").
-                    when()
-                    .get("/rate/{ts}/{from}/{to}", "2017-04-01T13:29:00", currency, primaryCurrency)
-                    .then()
-                    .assertThat().statusCode(200)
-                    .assertThat().contentType("application/vnd.mdg+json")
-                    .extract().asString())
-                    .read("data.attributes.rate", BigDecimal.class)
-            rateMap[currency]=rate
-        }
-
-        return value.multiply(rateMap[currency])
-    }
-
-    private getCurrencyForAccount(account_id) {
-        return JsonPath.parse(given()
-                .contentType("application/vnd.mdg+json").
-                when()
-                .get("/account")
-                .then()
-                .assertThat().statusCode(200)
-                .assertThat().contentType("application/vnd.mdg+json")
-                .extract().asString()).read("data[?(@.id == ${account_id})].attributes.currency_id", List.class).first()
-
-    }
 
     def 'Budget incoming amount should be sum of all asset accounts before budget term'() {
         given: 'Sum all transactions before budget'
@@ -103,7 +67,7 @@ class BudgetCalculationsSpecification extends Specification {
             x.each { op ->
                 if (assetAccountIds.contains(op['account_id'])) {
                     def opAmount = new BigDecimal(op['amount'])
-                    opAmount = applyRate(opAmount, getCurrencyForAccount(op['account_id']))
+                    opAmount = rateConverter.applyRate(opAmount, rateConverter.getCurrencyForAccount(op['account_id']))
                     incomingAmount = incomingAmount.add(opAmount)
                 }
             }
@@ -225,7 +189,7 @@ class BudgetCalculationsSpecification extends Specification {
                 .extract().asString())
         def updatedAmount = updatedBody.read("data.attributes.outgoing_amount.expected")
 
-        def expectedDifference = applyRate(9000, getCurrencyForAccount(entryAccount))
+        def expectedDifference = rateConverter.applyRate(9000, rateConverter.getCurrencyForAccount(entryAccount))
 
         assertThat(new BigDecimal(updatedAmount).subtract(new BigDecimal(expectedAmount)).abs(), closeTo(new BigDecimal(expectedDifference), 0.001))
     }
