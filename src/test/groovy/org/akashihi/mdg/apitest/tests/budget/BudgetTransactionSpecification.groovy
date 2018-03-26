@@ -4,6 +4,7 @@ import com.jayway.jsonpath.JsonPath
 import groovy.json.JsonOutput
 import org.akashihi.mdg.apitest.fixtures.BudgetFixture
 import org.akashihi.mdg.apitest.fixtures.TransactionFixture
+import org.akashihi.mdg.apitest.util.RateConversion
 import spock.lang.Specification
 
 import static io.restassured.RestAssured.given
@@ -13,15 +14,17 @@ import static org.hamcrest.Matchers.equalTo
 import static org.junit.Assert.assertThat
 
 class BudgetTransactionSpecification extends Specification {
-    static BudgetFixture bFixture = new BudgetFixture();
-    static TransactionFixture tFixture = new TransactionFixture();
-    static def accounts;
-    static def transaction;
+    static BudgetFixture bFixture = new BudgetFixture()
+    static TransactionFixture tFixture = new TransactionFixture()
+    static def accounts
+    static def transaction
+    static def rateConverter
 
     def setupSpec() {
-        setupAPI();
-        accounts = tFixture.prepareAccounts();
-        bFixture.makeBudget(bFixture.aprBudget);
+        setupAPI()
+        rateConverter = new RateConversion()
+        accounts = tFixture.prepareAccounts()
+        bFixture.makeBudget(bFixture.aprBudget)
 
         transaction = [
                 "data": [
@@ -80,7 +83,9 @@ class BudgetTransactionSpecification extends Specification {
                 .extract().asString())
         def actualAmount = body.read("data.attributes.outgoing_amount.actual", BigDecimal.class)
 
-        assertThat(actualAmount.subtract(initialAmount), equalTo(new BigDecimal(50)))
+        def expected = rateConverter.applyRate(50, rateConverter.getCurrencyForAccount(accounts["asset"]))
+
+        assertThat(actualAmount.subtract(initialAmount), equalTo(new BigDecimal(expected)))
 
     }
 
@@ -114,7 +119,9 @@ class BudgetTransactionSpecification extends Specification {
                 .extract().asString())
         def actualAmount = body.read("data.attributes.outgoing_amount.actual", BigDecimal.class)
 
-        assertThat(actualAmount.subtract(initialAmount), equalTo(new BigDecimal(-50)))
+        def expected = rateConverter.applyRate(-50, rateConverter.getCurrencyForAccount(accounts["asset"]))
+
+        assertThat(actualAmount.subtract(initialAmount), equalTo(new BigDecimal(expected)))
     }
 
     def 'Budget actual amount should change when transaction is edited'() {
@@ -152,6 +159,8 @@ class BudgetTransactionSpecification extends Specification {
                 .extract().asString())
         def actualAmount = body.read("data.attributes.outgoing_amount.actual", BigDecimal.class)
 
-        assertThat(actualAmount.subtract(initialAmount), equalTo(new BigDecimal(50)))
+        def expected = rateConverter.applyRate(50, rateConverter.getCurrencyForAccount(accounts["asset"]))
+
+        assertThat(actualAmount.subtract(initialAmount), equalTo(new BigDecimal(expected)))
     }
 }
