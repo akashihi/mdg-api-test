@@ -47,6 +47,14 @@ class BudgetEntrySpecification extends Specification {
         def accs = listBody.read("data.*.attributes.account_id").collect()
         assertTrue(accs.contains(accounts["income"].intValue()))
         assertTrue(accs.contains(accounts["expense"].intValue()))
+
+        def accNames = listBody.read("data.*.attributes.account_name").collect()
+        assertTrue(accNames.contains("Salary"))
+        assertTrue(accNames.contains("Rent"))
+
+        def accTypes = listBody.read("data.*.attributes.account_type").collect()
+        assertTrue(accTypes.contains("income"))
+        assertTrue(accTypes.contains("expense"))
     }
 
     def 'Budget entries are created in existing budget when new account is created'() {
@@ -71,6 +79,13 @@ class BudgetEntrySpecification extends Specification {
         assertTrue(accs.contains(accounts["income"].intValue()))
         assertTrue(accs.contains(accounts["expense"].intValue()))
 
+        def accNames = listBody.read("data.*.attributes.account_name").collect()
+        assertTrue(accNames.contains("Salary"))
+        assertTrue(accNames.contains("Rent"))
+
+        def accTypes = listBody.read("data.*.attributes.account_type").collect()
+        assertTrue(accTypes.contains("income"))
+        assertTrue(accTypes.contains("expense"))
     }
 
     def 'Budget entries should be accessible by id'() {
