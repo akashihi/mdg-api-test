@@ -12,10 +12,10 @@ import static org.junit.Assert.assertThat
 
 class TransactionSpecification extends Specification {
 
-    TransactionFixture f = new TransactionFixture();
+    TransactionFixture f = new TransactionFixture()
 
     def setupSpec() {
-        setupAPI();
+        setupAPI()
     }
 
     def "User creates new transaction"() {

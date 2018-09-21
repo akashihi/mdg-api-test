@@ -14,10 +14,10 @@ import static org.hamcrest.Matchers.*
 import static org.junit.Assert.assertThat
 
 class TransactionFilterSpecification extends Specification {
-    TransactionFixture f = new TransactionFixture();
+    TransactionFixture f = new TransactionFixture()
 
     def setupSpec() {
-        setupAPI();
+        setupAPI()
     }
 
     def "User sorts transaction on timestamp descending"() {
@@ -134,26 +134,6 @@ class TransactionFilterSpecification extends Specification {
             assertThat(x, greaterThanOrEqualTo(current))
             current = x
         }
-    }
-
-    def "User filters transaction by comment"() {
-        given: "Several transactions with different comments"
-        f.makeTransactions()
-
-        when: "Transaction list sorted by timestamp requested"
-        def response = given()
-                .queryParam("filter", "{\"comment\": \"Income transaction\"} ")
-                .contentType("application/vnd.mdg+json").
-                when()
-                .get("/transaction")
-
-        then: "Should only return transactions, matching filter"
-        def body = JsonPath.parse(response.then()
-                .assertThat().statusCode(200)
-                .assertThat().contentType("application/vnd.mdg+json")
-                .extract().asString())
-        assertThat(body.read("data[?(@.attributes.comment == 'Income transaction')]", List.class), not(empty()))
-        assertThat(body.read("data[?(@.attributes.comment != 'Income transaction')]", List.class), empty())
     }
 
     def "User filters transaction by tag"() {
