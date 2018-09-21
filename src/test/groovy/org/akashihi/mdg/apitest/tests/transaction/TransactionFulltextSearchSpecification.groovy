@@ -42,4 +42,26 @@ class TransactionFulltextSearchSpecification extends Specification {
         assertThat(body.read("data[?(@.attributes.comment == 'Income transaction')]", List.class), not(empty()))
         assertThat(body.read("data[?(@.attributes.comment != 'Income transaction')]", List.class), empty())
     }
+
+    def "User filters transaction by tag"() {
+        given: "Several transactions with different tags"
+        f.makeTransactions()
+
+        when: "Transaction list sorted by timestamp requested"
+        def response = given()
+                .queryParam("filter", "{\"tag\": [\"trnsaction\"]} ")
+                .contentType("application/vnd.mdg+json").
+                when()
+                .get("/transaction")
+
+        then: "Should only return transactions, matching filter"
+        def body = JsonPath.parse(response.then()
+                .assertThat().statusCode(200)
+                .assertThat().contentType("application/vnd.mdg+json")
+                .extract().asString())
+        assertThat(body.read("data[?(@.attributes.comment == 'Income transaction')]", List.class), not(empty()))
+        assertThat(body.read("data[?(@.attributes.comment == 'Test transaction')]", List.class), not(empty()))
+        assertThat(body.read("data[?(@.attributes.comment == 'Spend transaction')]", List.class), empty())
+    }
+
 }
