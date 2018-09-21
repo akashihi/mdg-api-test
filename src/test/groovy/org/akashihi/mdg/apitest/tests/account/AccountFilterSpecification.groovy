@@ -43,7 +43,7 @@ class AccountFilterSpecification extends Specification {
                 then()
                 .assertThat().statusCode(204)
 
-        then: "Deleted account should be absent from accounts list"
+        then: "Deleted account still will be available if not filtering is applied"
         def response = given()
                 .contentType("application/vnd.mdg+json").
                 when()
@@ -54,7 +54,7 @@ class AccountFilterSpecification extends Specification {
                 .assertThat().contentType("application/vnd.mdg+json")
                 .extract().asString()
         )
-        assertThat(body.read("data[?(@.id == ${accountId})]"), empty())
+        assertThat(body.read("data[?(@.id == ${accountId})]"), not(empty()))
     }
 
     def "User requests account list including hidden accounts"() {
@@ -88,6 +88,38 @@ class AccountFilterSpecification extends Specification {
         )
         assertThat(body.read("data[?(@.id == ${accountId})]", List.class).size(), is(1))
         assertThat(body.read("data[?(@.id == ${accountId})].attributes.hidden", List.class).first(), is(true))
+    }
+
+    def "User requests account list excluding hidden accounts"() {
+        given: "A brand new account"
+        def accountId = given()
+                .contentType("application/vnd.mdg+json").
+                when()
+                .request().body(JsonOutput.toJson(account))
+                .post("/account").
+                then()
+                .assertThat().statusCode(201)
+                .extract().path("data.id")
+
+        when: "Account is deleted"
+        when()
+                .delete("/account/{id}", accountId).
+                then()
+                .assertThat().statusCode(204)
+
+        then: "Deleted account should not be in accounts list as only visible accounts are requested"
+        def response = given()
+                .queryParam("filter", "{\"hidden\":false}")
+                .contentType("application/vnd.mdg+json").
+                when()
+                .get("/account")
+        def body = JsonPath.parse(response
+                .then()
+                .assertThat().statusCode(200)
+                .assertThat().contentType("application/vnd.mdg+json")
+                .extract().asString()
+        )
+        assertThat(body.read("data[?(@.id == ${accountId})]", List.class), empty())
     }
 
     def "User requests account list, filtering it by some field"() {
