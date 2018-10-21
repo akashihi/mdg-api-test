@@ -1,6 +1,8 @@
 package org.akashihi.mdg.apitest.tests
 
 import com.jayway.jsonpath.JsonPath
+import groovy.json.JsonOutput
+import groovy.json.JsonSlurper
 import spock.lang.Specification
 
 import static io.restassured.RestAssured.given
@@ -88,4 +90,48 @@ class CurrencySpecification extends Specification {
         response.then()
                 .assertThat().statusCode(404)
     }
+
+    def "User disables currency"() {
+        given: "A currency object"
+        def currencyId = given()
+                .contentType("application/vnd.mdg+json").
+                when()
+                .get("/currency").
+                then()
+                .assertThat().statusCode(200)
+                .assertThat().contentType("application/vnd.mdg+json")
+                .extract().path("data[0].id")
+
+        and: "Specific currency is requested"
+        def response = given()
+                .contentType("application/vnd.mdg+json").
+                when()
+                .get("/currency/{id}", currencyId)
+        def currency = new JsonSlurper().parseText(response.then().extract().asString())
+
+
+        when: "New currency data is submitted"
+        currency.data.attributes.active = false
+        given()
+                .contentType("application/vnd.mdg+json")
+                .when()
+                .request().body(JsonOutput.toJson(currency))
+                .put("/currency/{id}", currencyId).
+                then()
+                .assertThat().statusCode(202)
+                .assertThat().contentType("application/vnd.mdg+json")
+                .body("data.attributes.active", is(false))
+
+        then: "modified data will be retrieved on request"
+        given()
+                .contentType("application/vnd.mdg+json").
+                when()
+                .get("/currency/{id}", currencyId).
+                then()
+                .assertThat().statusCode(200)
+                .assertThat().contentType("application/vnd.mdg+json")
+                .body("data.type", equalTo("currency"))
+                .body("data.attributes.active", is(false))
+    }
+
 }
