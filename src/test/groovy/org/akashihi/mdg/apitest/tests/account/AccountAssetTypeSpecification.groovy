@@ -9,7 +9,7 @@ import static org.akashihi.mdg.apitest.apiConnectionBase.setupAPI
 import static org.hamcrest.Matchers.*
 import static org.junit.Assert.assertThat
 
-class AccountFavOpsSpecification extends Specification {
+class AccountAssetTypeSpecification extends Specification {
     def account = [
             "data": [
                     "type"      : "account",
@@ -18,7 +18,19 @@ class AccountFavOpsSpecification extends Specification {
                             "currency_id" : 978,
                             "name"        : "Waller",
                             "favorite"    : true,
-                            "operational" : true
+                            "operational" : true,
+                            "asset_type"  : 'cash'
+                    ]
+            ]
+    ]
+
+    def nonAsset = [
+            "data": [
+                    "type"      : "account",
+                    "attributes": [
+                            "account_type": "expense",
+                            "currency_id" : 978,
+                            "name"        : "Rent"
                     ]
             ]
     ]
@@ -27,8 +39,8 @@ class AccountFavOpsSpecification extends Specification {
         setupAPI()
     }
 
-    def "User creates new fav/op account"() {
-        given: "A brand new fav/op account"
+    def "User creates new cash account"() {
+        given: "A brand new cash account"
 
         when: "Account is submitted to the system"
         def accountId = given()
@@ -42,8 +54,7 @@ class AccountFavOpsSpecification extends Specification {
                 .assertThat().header("Location", containsString("/api/account/"))
                 .body("data.type", equalTo("account"))
                 .body("data.attributes.account_type", equalTo("asset"))
-                .body("data.attributes.favorite", equalTo(true))
-                .body("data.attributes.operational", equalTo(true))
+                .body("data.attributes.asset_type", equalTo("cash"))
                 .extract().path("data.id")
 
         then: "Account appears on the accounts list"
@@ -59,11 +70,10 @@ class AccountFavOpsSpecification extends Specification {
         assertThat(body.read("data"), not(empty()))
         assertThat(body.read("data[?(@.id == ${accountId})].type", List.class).first(), equalTo("account"))
         assertThat(body.read("data[?(@.id == ${accountId})].attributes.account_type", List.class).first(), equalTo("asset"))
-        assertThat(body.read("data[?(@.id == ${accountId})].attributes.favorite", List.class).first(), equalTo(true))
-        assertThat(body.read("data[?(@.id == ${accountId})].attributes.operational", List.class).first(), equalTo(true))
+        assertThat(body.read("data[?(@.id == ${accountId})].attributes.asset_type", List.class).first(), equalTo("cash"))
     }
 
-    def "User checks fav/op account data"() {
+    def "User checks asset_type data"() {
         given: "A brand new account"
         def accountId = given()
                 .contentType("application/vnd.mdg+json").
@@ -86,11 +96,10 @@ class AccountFavOpsSpecification extends Specification {
                 .assertThat().contentType("application/vnd.mdg+json")
                 .body("data.type", equalTo("account"))
                 .body("data.attributes.account_type", equalTo("asset"))
-                .body("data.attributes.favorite", equalTo(true))
-                .body("data.attributes.operational", equalTo(true))
+                .body("data.attributes.asset_type", equalTo("cash"))
     }
 
-    def "User modifies fav/op account data"() {
+    def "User modifies asset_type data"() {
         given: "A brand new account"
         def accountId = given()
                 .contentType("application/vnd.mdg+json").
@@ -103,8 +112,7 @@ class AccountFavOpsSpecification extends Specification {
 
         when: "New account data is submitted"
         def modifiedAccount = account.clone()
-        modifiedAccount.data.attributes.favorite = false
-        modifiedAccount.data.attributes.operational = false
+        modifiedAccount.data.attributes.asset_type = "tradable"
         given()
                 .contentType("application/vnd.mdg+json")
                 .when()
@@ -113,8 +121,7 @@ class AccountFavOpsSpecification extends Specification {
                 then()
                 .assertThat().statusCode(202)
                 .assertThat().contentType("application/vnd.mdg+json")
-                .body("data.attributes.favorite", equalTo(false))
-                .body("data.attributes.operational", equalTo(false))
+                .body("data.attributes.asset_type", equalTo("tradable"))
 
         then: "modified data will be retrieved on request"
         given()
@@ -126,7 +133,52 @@ class AccountFavOpsSpecification extends Specification {
                 .assertThat().contentType("application/vnd.mdg+json")
                 .body("data.type", equalTo("account"))
                 .body("data.attributes.account_type", equalTo("asset"))
-                .body("data.attributes.favorite", equalTo(false))
-                .body("data.attributes.operational", equalTo(false))
+                .body("data.attributes.asset_type", equalTo("tradable"))
     }
+
+    def "User can't create non-asset account with asset_type set"() {
+        given: "A brand new non-asset account with asset_type"
+        def modifiedAccount = nonAsset.clone()
+        modifiedAccount.data.attributes.asset_type = 'deposit'
+
+        when: "Account is submitted to the system"
+        def response = given()
+                .contentType("application/vnd.mdg+json").
+                when()
+                .request().body(JsonOutput.toJson(modifiedAccount))
+                .post("/account")
+
+        then: "Account should not be accepted"
+        response.then()
+                .assertThat().statusCode(412)
+                .assertThat().contentType("application/vnd.mdg+json")
+                .body("errors[0].code", equalTo("ACCOUNT_NONASSET_INVALIDFLAG"))
+    }
+
+    def "User can't set asset type on non-asset account"() {
+        given: "A brand new account"
+        def accountId = given()
+                .contentType("application/vnd.mdg+json").
+                when()
+                .request().body(JsonOutput.toJson(nonAsset))
+                .post("/account").
+                then()
+                .assertThat().statusCode(201)
+                .extract().path("data.id")
+
+        when: "New account data is submitted"
+        def modifiedAccount = nonAsset.clone()
+        modifiedAccount.data.attributes.asset_type = 'deposit'
+        def response = given()
+                .contentType("application/vnd.mdg+json")
+                .when()
+                .request().body(JsonOutput.toJson(modifiedAccount))
+                .put("/account/{id}", accountId)
+        then: "Account should not be accepted"
+        response.then()
+                .assertThat().statusCode(412)
+                .assertThat().contentType("application/vnd.mdg+json")
+                .body("errors[0].code", equalTo("ACCOUNT_NONASSET_INVALIDFLAG"))
+    }
+
 }

@@ -34,7 +34,7 @@ class AccountFavOpsValiditySpecification extends Specification {
         def response = given()
                 .contentType("application/vnd.mdg+json").
                 when()
-                .request().body(JsonOutput.toJson(account))
+                .request().body(JsonOutput.toJson(modifiedAccount))
                 .post("/account")
 
         then: "Account should not be accepted"
@@ -53,7 +53,7 @@ class AccountFavOpsValiditySpecification extends Specification {
         def response = given()
                 .contentType("application/vnd.mdg+json").
                 when()
-                .request().body(JsonOutput.toJson(account))
+                .request().body(JsonOutput.toJson(modifiedAccount))
                 .post("/account")
 
         then: "Account should not be accepted"
@@ -94,7 +94,7 @@ class AccountFavOpsValiditySpecification extends Specification {
         def accountId = given()
                 .contentType("application/vnd.mdg+json").
                 when()
-                .request().body(JsonOutput.toJson(account))
+WWWw                .request().body(JsonOutput.toJson(account))
                 .post("/account").
                 then()
                 .assertThat().statusCode(201)
