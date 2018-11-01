@@ -94,7 +94,7 @@ class AccountFavOpsValiditySpecification extends Specification {
         def accountId = given()
                 .contentType("application/vnd.mdg+json").
                 when()
-WWWw                .request().body(JsonOutput.toJson(account))
+                .request().body(JsonOutput.toJson(account))
                 .post("/account").
                 then()
                 .assertThat().statusCode(201)
