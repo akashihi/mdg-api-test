@@ -24,7 +24,7 @@ class TotalsReportFixture {
                     "type"      : "account",
                     "attributes": [
                             "account_type": "income",
-                            "currency_id" : 978,
+                            "currency_id" : 840,
                             "name"        : "Salary"
                     ]
             ]

@@ -32,16 +32,16 @@ class TotalsReportSpecification extends Specification {
                                 "operations": [
                                         [
                                                 "account_id": accounts["income"],
-                                                "amount"    : -328.5
-                                        ],
-                                        [
-                                                "account_id": accounts["asset"],
-                                                "amount"    : 150
+                                                "amount"    : -388
                                         ],
                                         [
                                                 "account_id": accounts["usdAsset"],
-                                                "rate"      : 1.19,
                                                 "amount"    : 150
+                                        ],
+                                        [
+                                                "account_id": accounts["asset"],
+                                                "rate"      : 1.19,
+                                                "amount"    : 200
                                         ]
                                 ]
                         ]
@@ -66,8 +66,8 @@ class TotalsReportSpecification extends Specification {
                 .assertThat().contentType("application/vnd.mdg+json")
                 .extract().asString())
 
-        assertThat(body.read("data.attributes.value[?(@.asset_type == 'broker')].primary_balance", List.class).first(), equalTo(328.5))
-        assertThat(body.read("data.attributes.value[?(@.asset_type == 'broker')].totals[?(@.currency_id == 978)].balance", List.class).first(), equalTo(150))
+        assertThat(body.read("data.attributes.value[?(@.asset_type == 'broker')].primary_balance", List.class).first(), equalTo(388))
         assertThat(body.read("data.attributes.value[?(@.asset_type == 'broker')].totals[?(@.currency_id == 840)].balance", List.class).first(), equalTo(150))
+        assertThat(body.read("data.attributes.value[?(@.asset_type == 'broker')].totals[?(@.currency_id == 978)].balance", List.class).first(), equalTo(200))
     }
 }
