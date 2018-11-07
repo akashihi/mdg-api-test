@@ -1,6 +1,5 @@
 package org.akashihi.mdg.apitest.tests.transaction
 
-import com.jayway.jsonpath.JsonPath
 import groovy.json.JsonOutput
 import org.akashihi.mdg.apitest.fixtures.TransactionFixture
 import spock.lang.Specification
@@ -8,17 +7,13 @@ import spock.lang.Specification
 import static io.restassured.RestAssured.given
 import static io.restassured.RestAssured.when
 import static org.akashihi.mdg.apitest.apiConnectionBase.setupAPI
-import static org.hamcrest.Matchers.empty
 import static org.hamcrest.Matchers.equalTo
-import static org.hamcrest.Matchers.is
-import static org.hamcrest.Matchers.is
-import static org.junit.Assert.assertThat
 
 class TransactionAccountSpecification extends Specification {
     TransactionFixture f = new TransactionFixture();
 
     def setupSpec() {
-        setupAPI();
+        setupAPI()
     }
 
     def 'New transaction changes account balance'() {
