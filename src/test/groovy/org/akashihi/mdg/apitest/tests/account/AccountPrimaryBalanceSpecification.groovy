@@ -73,7 +73,7 @@ class AccountPrimaryBalanceSpecification extends Specification {
                                 "operations": [
                                         [
                                                 "account_id": accountId,
-                                                "amount"    : -1000
+                                                "amount"    : 1000
                                         ],
                                         [
                                                 "account_id": incomeAccountId,
@@ -147,7 +147,7 @@ class AccountPrimaryBalanceSpecification extends Specification {
                                 "operations": [
                                         [
                                                 "account_id": accountId,
-                                                "amount"    : -1000
+                                                "amount"    : 1000
                                         ],
                                         [
                                                 "account_id": incomeAccountId,
