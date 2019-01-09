@@ -16,8 +16,18 @@ class AccountPrimaryBalanceSpecification extends Specification {
                     "attributes": [
                             "account_type": "expense",
                             "currency_id" : 978,
-                            "name"        : "Rent",
-                            "balance"     : 1000
+                            "name"        : "Rent"
+                    ]
+            ]
+    ]
+
+    def incomeAccount = [
+            "data": [
+                    "type"      : "account",
+                    "attributes": [
+                            "account_type": "income",
+                            "currency_id" : 978,
+                            "name"        : "Salary"
                     ]
             ]
     ]
@@ -27,9 +37,7 @@ class AccountPrimaryBalanceSpecification extends Specification {
     }
 
     def "User creates new account"() {
-        given: "A brand new account with initial balance"
-
-        when: "Account is submitted to the system"
+        given: "Account in a non-default currency"
         def accountId = given()
                 .contentType("application/vnd.mdg+json").
                 when()
@@ -40,8 +48,50 @@ class AccountPrimaryBalanceSpecification extends Specification {
                 .assertThat().contentType("application/vnd.mdg+json")
                 .assertThat().header("Location", containsString("/api/account/"))
                 .body("data.type", equalTo("account"))
-                .body("data.attributes.balance", equalTo(1000))
-                .body("data.attributes.primary_balance", equalTo(1190))
+                .extract().path("data.id")
+
+        def incomeAccountId = given()
+                .contentType("application/vnd.mdg+json").
+                when()
+                .request().body(JsonOutput.toJson(incomeAccount))
+                .post("/account").
+                then()
+                .assertThat().statusCode(201)
+                .assertThat().contentType("application/vnd.mdg+json")
+                .assertThat().header("Location", containsString("/api/account/"))
+                .body("data.type", equalTo("account"))
+                .extract().path("data.id")
+
+        when: "New operation on that account is made"
+        def transaction = [
+                "data": [
+                        "type"      : "transaction",
+                        "attributes": [
+                                "timestamp" : "2017-02-04T16:45:36",
+                                "comment"   : "Test transaction",
+                                "tags"      : ["test", "transaction"],
+                                "operations": [
+                                        [
+                                                "account_id": accountId,
+                                                "amount"    : -1000
+                                        ],
+                                        [
+                                                "account_id": incomeAccountId,
+                                                "amount"    : -1000
+                                        ]
+                                ]
+                        ]
+                ]
+        ]
+
+        given()
+                .contentType("application/vnd.mdg+json").
+                when()
+                .request().body(JsonOutput.toJson(transaction))
+                .post("/transaction").
+                then()
+                .assertThat().statusCode(201)
+                .assertThat().contentType("application/vnd.mdg+json")
                 .extract().path("data.id")
 
         then: "Account appears on the accounts list"
@@ -61,7 +111,7 @@ class AccountPrimaryBalanceSpecification extends Specification {
     }
 
     def "User checks account data"() {
-        given: "A brand new account with initial balance"
+        given: "Account in a non-default currency"
         def accountId = given()
                 .contentType("application/vnd.mdg+json").
                 when()
@@ -69,6 +119,53 @@ class AccountPrimaryBalanceSpecification extends Specification {
                 .post("/account").
                 then()
                 .assertThat().statusCode(201)
+                .assertThat().contentType("application/vnd.mdg+json")
+                .assertThat().header("Location", containsString("/api/account/"))
+                .body("data.type", equalTo("account"))
+                .extract().path("data.id")
+
+        def incomeAccountId = given()
+                .contentType("application/vnd.mdg+json").
+                when()
+                .request().body(JsonOutput.toJson(incomeAccount))
+                .post("/account").
+                then()
+                .assertThat().statusCode(201)
+                .assertThat().contentType("application/vnd.mdg+json")
+                .assertThat().header("Location", containsString("/api/account/"))
+                .body("data.type", equalTo("account"))
+                .extract().path("data.id")
+
+        when: "New operation on that account is made"
+        def transaction = [
+                "data": [
+                        "type"      : "transaction",
+                        "attributes": [
+                                "timestamp" : "2017-02-04T16:45:36",
+                                "comment"   : "Test transaction",
+                                "tags"      : ["test", "transaction"],
+                                "operations": [
+                                        [
+                                                "account_id": accountId,
+                                                "amount"    : -1000
+                                        ],
+                                        [
+                                                "account_id": incomeAccountId,
+                                                "amount"    : -1000
+                                        ]
+                                ]
+                        ]
+                ]
+        ]
+
+        given()
+                .contentType("application/vnd.mdg+json").
+                when()
+                .request().body(JsonOutput.toJson(transaction))
+                .post("/transaction").
+                then()
+                .assertThat().statusCode(201)
+                .assertThat().contentType("application/vnd.mdg+json")
                 .extract().path("data.id")
 
         when: "Specific account is requested"
