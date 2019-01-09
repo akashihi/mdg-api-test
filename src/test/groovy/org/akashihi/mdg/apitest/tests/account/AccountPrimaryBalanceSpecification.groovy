@@ -168,14 +168,12 @@ class AccountPrimaryBalanceSpecification extends Specification {
                 .assertThat().contentType("application/vnd.mdg+json")
                 .extract().path("data.id")
 
-        when: "Specific account is requested"
-        def response = given()
+        then: "Account object should be returned"
+        given()
                 .contentType("application/vnd.mdg+json").
                 when()
                 .get("/account/{id}", accountId)
-
-        then: "Account object should be returned"
-        response.then()
+                .then()
                 .assertThat().statusCode(200)
                 .assertThat().contentType("application/vnd.mdg+json")
                 .body("data.type", equalTo("account"))
