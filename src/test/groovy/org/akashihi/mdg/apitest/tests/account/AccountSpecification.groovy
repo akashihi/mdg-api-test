@@ -6,7 +6,6 @@ import spock.lang.Specification
 
 import static io.restassured.RestAssured.given
 import static org.akashihi.mdg.apitest.apiConnectionBase.setupAPI
-import static org.hamcrest.Matchers.*
 import static org.junit.Assert.assertThat
 
 class AccountSpecification extends Specification {
