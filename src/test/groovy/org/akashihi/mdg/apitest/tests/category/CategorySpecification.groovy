@@ -1,8 +1,12 @@
 package org.akashihi.mdg.apitest.tests.category
 
+import com.jayway.jsonpath.JsonPath
 import groovy.json.JsonOutput
 import spock.lang.Specification
 
+import static io.restassured.RestAssured.given
+import static org.akashihi.mdg.apitest.apiConnectionBase.setupAPI
+import static org.hamcrest.Matchers.*
 import static org.junit.Assert.assertThat
 
 class CategorySpecification extends Specification {
@@ -11,7 +15,7 @@ class CategorySpecification extends Specification {
                     "type"      : "category",
                     "attributes": [
                             "name": "Bonuses",
-                            "order" : 1,
+                            "priority" : 1,
                             "account_type" : "expense"
                     ]
             ]
@@ -22,26 +26,28 @@ class CategorySpecification extends Specification {
     }
 
     def 'User creates new category'() {
-        given 'A new category'
+        given: 'A new category'
 
 
-        when 'Category is submitted to the system'
+        when: 'Category is submitted to the system'
         def categoryId = given()
                 .contentType("application/vnd.mdg+json").
                 when()
+                .log().all()
                 .request().body(JsonOutput.toJson(category))
-                .post("/account").
+                .post("/category").
                 then()
+                .log().all()
                 .assertThat().statusCode(201)
                 .assertThat().contentType("application/vnd.mdg+json")
                 .assertThat().header("Location", containsString("/api/category/"))
                 .body("data.type", equalTo("category"))
                 .body("data.attributes.account_type", equalTo("expense"))
-                .body("data.attributes.order", equalTo(1))
+                .body("data.attributes.priority", equalTo(1))
                 .body("data.attributes.name", equalTo("Bonuses"))
                 .extract().path("data.id")
 
-        then 'Category appears on the category list'
+        then: 'Category appears on the category list'
         def response = given()
                 .contentType("application/vnd.mdg+json").
                 when()
@@ -52,9 +58,9 @@ class CategorySpecification extends Specification {
                 .extract().asString())
 
         assertThat(body.read("data"), not(empty()))
-        assertThat(body.read("data[?(@.id == ${categoryId})].type", List.class).first(), equalTo("account"))
+        assertThat(body.read("data[?(@.id == ${categoryId})].type", List.class).first(), equalTo("category"))
         assertThat(body.read("data[?(@.id == ${categoryId})].attributes.account_type", List.class).first(), equalTo("expense"))
-        assertThat(body.read("data[?(@.id == ${categoryId})].attributes.order", List.class).first(), equalTo(1))
+        assertThat(body.read("data[?(@.id == ${categoryId})].attributes.priority", List.class).first(), equalTo(1))
         assertThat(body.read("data[?(@.id == ${categoryId})].attributes.name", List.class).first(), equalTo("Bonuses"))
     }
 
@@ -81,7 +87,7 @@ class CategorySpecification extends Specification {
                 .assertThat().contentType("application/vnd.mdg+json")
                 .body("data.type", equalTo("category"))
                 .body("data.attributes.account_type", equalTo("expense"))
-                .body("data.attributes.order", equalTo(1))
+                .body("data.attributes.priority", equalTo(1))
                 .body("data.attributes.name", equalTo("Bonuses"))
     }
 
@@ -99,7 +105,7 @@ class CategorySpecification extends Specification {
         when: "New category data is submitted"
         def modifiedCategory = category.clone()
         modifiedCategory.data.attributes.name = "Salary"
-        modifiedCategory.data.attributes.order = 9
+        modifiedCategory.data.attributes.priority = 9
         given()
                 .contentType("application/vnd.mdg+json")
                 .when()
@@ -109,7 +115,7 @@ class CategorySpecification extends Specification {
                 .assertThat().statusCode(202)
                 .assertThat().contentType("application/vnd.mdg+json")
                 .body("data.attributes.name", equalTo("Salary"))
-                .body("data.attributes.order", equalTo(9))
+                .body("data.attributes.priority", equalTo(9))
 
         then: "modified data will be retrieved on request"
         given()
@@ -121,7 +127,7 @@ class CategorySpecification extends Specification {
                 .assertThat().contentType("application/vnd.mdg+json")
                 .body("data.type", equalTo("category"))
                 .body("data.attributes.account_type", equalTo("expense"))
-                .body("data.attributes.order", equalTo(9))
+                .body("data.attributes.priority", equalTo(9))
                 .body("data.attributes.name", equalTo("Salary"))
     }
 
