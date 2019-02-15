@@ -33,11 +33,9 @@ class CategorySpecification extends Specification {
         def categoryId = given()
                 .contentType("application/vnd.mdg+json").
                 when()
-                .log().all()
                 .request().body(JsonOutput.toJson(category))
                 .post("/category").
                 then()
-                .log().all()
                 .assertThat().statusCode(201)
                 .assertThat().contentType("application/vnd.mdg+json")
                 .assertThat().header("Location", containsString("/api/category/"))

@@ -3,13 +3,19 @@ package org.akashihi.mdg.apitest.tests.category
 import groovy.json.JsonOutput
 import spock.lang.Specification
 
+import static io.restassured.RestAssured.given
+import static org.akashihi.mdg.apitest.apiConnectionBase.setupAPI
+import static org.hamcrest.Matchers.empty
+import static org.hamcrest.Matchers.equalTo
+import static org.hamcrest.Matchers.isEmptyOrNullString
+
 class CategoryAccountSpecification extends Specification {
     def category = [
             "data": [
                     "type"      : "category",
                     "attributes": [
                             "name": "Bonuses",
-                            "order" : 1,
+                            "priority" : 1,
                             "account_type" : "expense"
                     ]
             ]
@@ -20,7 +26,7 @@ class CategoryAccountSpecification extends Specification {
     }
 
     def 'Account is created with the category'() {
-        given 'New category'
+        given: 'New category'
         def categoryId = given()
                 .contentType("application/vnd.mdg+json").
                 when()
@@ -30,7 +36,7 @@ class CategoryAccountSpecification extends Specification {
                 .assertThat().statusCode(201)
                 .extract().path("data.id")
 
-        when 'Account is created with that category'
+        when: 'Account is created with that category'
         def account = [
                 "data": [
                         "type"      : "account",
@@ -65,7 +71,7 @@ class CategoryAccountSpecification extends Specification {
     }
 
     def 'Account is assigned to the category'() {
-        given 'New category and new account'
+        given: 'New category and new account'
         def categoryId = given()
                 .contentType("application/vnd.mdg+json").
                 when()
@@ -93,7 +99,7 @@ class CategoryAccountSpecification extends Specification {
                 .assertThat().statusCode(201)
                 .extract().path("data.id")
 
-        when 'Account is assigned to that category'
+        when: 'Account is assigned to that category'
         def modifiedAccount = account.clone()
         modifiedAccount.data.attributes.category_id = categoryId
         given()
@@ -119,7 +125,7 @@ class CategoryAccountSpecification extends Specification {
     }
 
     def 'Category is dropped while begin assigned to account'() {
-        given 'New category and account'
+        given: 'New category and account'
         def categoryId = given()
                 .contentType("application/vnd.mdg+json").
                 when()
@@ -160,17 +166,19 @@ class CategoryAccountSpecification extends Specification {
         def response = given()
                 .contentType("application/vnd.mdg+json").
                 when()
+        .log().all()
                 .get("/account/{id}", accountId)
 
         response.then()
+                .log().all()
                 .assertThat().statusCode(200)
                 .assertThat().contentType("application/vnd.mdg+json")
                 .body("data.type", equalTo("account"))
-                .body("data.attributes.category_id", empty())
+                .body("data.attributes.category_id", isEmptyOrNullString())
     }
 
     def 'Category is assigned to the incompatible account'() {
-        given 'New category and account'
+        given: 'New category and account'
         def categoryId = given()
                 .contentType("application/vnd.mdg+json").
                 when()
@@ -180,7 +188,7 @@ class CategoryAccountSpecification extends Specification {
                 .assertThat().statusCode(201)
                 .extract().path("data.id")
 
-        when 'Account with incompatible category is created'
+        when: 'Account with incompatible category is created'
         def account = [
                 "data": [
                         "type"      : "account",
