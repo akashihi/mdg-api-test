@@ -19,7 +19,7 @@ class TransactionFulltextSearchSpecification extends Specification {
         setupAPI()
         // Force full text search reindex
         when()
-                .put("/setting/mnt.transaction.reindex")
+                .put(API.Setting,"mnt.transaction.reindex")
                 .then()
                 .assertThat().statusCode(202)
     }
