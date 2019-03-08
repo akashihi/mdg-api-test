@@ -1,6 +1,7 @@
 package org.akashihi.mdg.apitest.fixtures
 
 import groovy.json.JsonOutput
+import org.akashihi.mdg.apitest.API
 
 import static io.restassured.RestAssured.given
 
@@ -50,14 +51,14 @@ class BudgetFixture {
                 .contentType("application/vnd.mdg+json").
                 when()
                 .request().body(JsonOutput.toJson(budget))
-                .post("/budget")
+                .post(API.Budgets)
     }
 
     def removeBudget(id) {
         given()
                 .contentType("application/vnd.mdg+json").
                 when()
-                .delete("/budget/{id}", id)
+                .delete(API.Budget, id)
                 .then()
                 .assertThat().statusCode(204)
     }

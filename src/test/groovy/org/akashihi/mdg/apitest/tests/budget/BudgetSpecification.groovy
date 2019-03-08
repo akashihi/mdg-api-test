@@ -3,6 +3,7 @@ package org.akashihi.mdg.apitest.tests.budget
 import com.jayway.jsonpath.JsonPath
 import groovy.json.JsonOutput
 import spock.lang.Specification
+import org.akashihi.mdg.apitest.API
 
 import static io.restassured.RestAssured.given
 import static org.akashihi.mdg.apitest.apiConnectionBase.setupAPI
@@ -31,7 +32,7 @@ class BudgetSpecification extends Specification {
                 .contentType("application/vnd.mdg+json").
                 when()
                 .request().body(JsonOutput.toJson(budget))
-                .post("/budget")
+                .post(API.Budgets)
         def body = JsonPath.parse(response.
                 then()
                 .assertThat().statusCode(201)
@@ -48,7 +49,7 @@ class BudgetSpecification extends Specification {
         def listResponse = given()
                 .contentType("application/vnd.mdg+json").
                 when()
-                .get("/budget")
+                .get(API.Budgets)
         def listBody =  JsonPath.parse(listResponse.then()
                 .assertThat().statusCode(200)
                 .assertThat().contentType("application/vnd.mdg+json")
@@ -75,13 +76,13 @@ class BudgetSpecification extends Specification {
                 .contentType("application/vnd.mdg+json").
                 when()
                 .request().body(JsonOutput.toJson(budget))
-                .post("/budget")
+                .post(API.Budgets)
 
         when: "Budget is requested by specifying it's data"
         def response = given()
                 .contentType("application/vnd.mdg+json").
                 when()
-                .get("/budget/{id}", "20170208")
+                .get(API.Budget, "20170208")
 
 
         then: "Budget data should be returned"
@@ -109,13 +110,13 @@ class BudgetSpecification extends Specification {
                 .contentType("application/vnd.mdg+json").
                 when()
                 .request().body(JsonOutput.toJson(budget))
-                .post("/budget")
+                .post(API.Budgets)
 
         when: "Budget is deleted"
         given()
                 .contentType("application/vnd.mdg+json").
                 when()
-                .delete("/budget/{id}", "20170210")
+                .delete(API.Budget, "20170210")
                 .then()
                 .assertThat().statusCode(204)
 
@@ -124,7 +125,7 @@ class BudgetSpecification extends Specification {
         def response = given()
                 .contentType("application/vnd.mdg+json").
                 when()
-                .get("/budget")
+                .get(API.Budgets)
         def body = JsonPath.parse(response.then()
                 .assertThat().statusCode(200)
                 .assertThat().contentType("application/vnd.mdg+json")

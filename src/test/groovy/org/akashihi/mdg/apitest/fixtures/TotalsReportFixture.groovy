@@ -1,6 +1,7 @@
 package org.akashihi.mdg.apitest.fixtures
 
 import groovy.json.JsonOutput
+import org.akashihi.mdg.apitest.API
 
 import java.time.LocalDateTime
 
@@ -47,7 +48,7 @@ class TotalsReportFixture {
                 .contentType("application/vnd.mdg+json").
                 when()
                 .request().body(JsonOutput.toJson(account))
-                .post("/account").
+                .post(API.Accounts).
                 then()
                 .assertThat().statusCode(201)
                 .extract().path("data.id")
@@ -66,7 +67,7 @@ class TotalsReportFixture {
                 .contentType("application/vnd.mdg+json").
                 when()
                 .request().body(JsonOutput.toJson(transaction))
-                .post("/transaction").
+                .post(API.Transactions).
                 then()
                 .assertThat().statusCode(201)
                 .assertThat().contentType("application/vnd.mdg+json")

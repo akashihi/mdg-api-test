@@ -5,6 +5,7 @@ import groovy.json.JsonOutput
 import org.akashihi.mdg.apitest.fixtures.BudgetFixture
 import org.akashihi.mdg.apitest.fixtures.TransactionFixture
 import spock.lang.Specification
+import org.akashihi.mdg.apitest.API
 
 import static io.restassured.RestAssured.given
 import static io.restassured.RestAssured.when
@@ -103,7 +104,7 @@ class BudgetEntryTransactionSpecification extends Specification {
         def initialExpense = new BigDecimal(listBody.read("data[?(@.attributes.account_id == ${accounts['expense']})].attributes.actual_amount").first())
 
         when: "Transaction is removed"
-        when().delete("/transaction/{id}", txId)
+        when().delete(API.Transaction, txId)
                 .then().assertThat().statusCode(204)
 
 
@@ -145,7 +146,7 @@ class BudgetEntryTransactionSpecification extends Specification {
                 .contentType("application/vnd.mdg+json").
                 when()
                 .request().body(JsonOutput.toJson(newTx))
-                .put("/transaction/{id}", txId)
+                .put(API.Transaction, txId)
 
 
         then: "Actual amount should change"

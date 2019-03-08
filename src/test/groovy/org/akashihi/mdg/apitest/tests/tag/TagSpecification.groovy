@@ -3,6 +3,7 @@ package org.akashihi.mdg.apitest.tests.tag
 import com.jayway.jsonpath.JsonPath
 import org.akashihi.mdg.apitest.fixtures.TransactionFixture
 import spock.lang.Specification
+import org.akashihi.mdg.apitest.API
 
 import static io.restassured.RestAssured.given
 import static org.akashihi.mdg.apitest.apiConnectionBase.setupAPI
@@ -24,7 +25,7 @@ class TagSpecification extends Specification {
        def response = given()
                .contentType("application/vnd.mdg+json").
                when()
-               .get("/tag")
+               .get(API.Tags)
 
        then: "It should contain transaction tags"
        def body = JsonPath.parse(response.then()

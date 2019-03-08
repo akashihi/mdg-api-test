@@ -5,6 +5,7 @@ import groovy.json.JsonOutput
 import org.akashihi.mdg.apitest.fixtures.BudgetFixture
 import org.akashihi.mdg.apitest.fixtures.TransactionFixture
 import spock.lang.Specification
+import org.akashihi.mdg.apitest.API
 
 import static io.restassured.RestAssured.given
 import static org.akashihi.mdg.apitest.apiConnectionBase.setupAPI

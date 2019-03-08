@@ -3,6 +3,7 @@ package org.akashihi.mdg.apitest.tests.transaction
 import groovy.json.JsonOutput
 import org.akashihi.mdg.apitest.fixtures.TransactionFixture
 import spock.lang.Specification
+import org.akashihi.mdg.apitest.API
 
 import static io.restassured.RestAssured.given
 import static io.restassured.RestAssured.when
@@ -45,7 +46,7 @@ class TransactionAccountSpecification extends Specification {
                 .contentType("application/vnd.mdg+json").
                 when()
                 .request().body(JsonOutput.toJson(transaction))
-                .post("/transaction").
+                .post(API.Transactions).
                 then()
                 .assertThat().statusCode(201)
 
@@ -53,7 +54,7 @@ class TransactionAccountSpecification extends Specification {
         given()
                 .contentType("application/vnd.mdg+json").
                 when()
-                .get("/account/{id}", accounts['income']).
+                .get(API.Account, accounts['income']).
                 then()
                 .assertThat().statusCode(200)
                 .assertThat().contentType("application/vnd.mdg+json")
@@ -62,7 +63,7 @@ class TransactionAccountSpecification extends Specification {
         given()
                 .contentType("application/vnd.mdg+json").
                 when()
-                .get("/account/{id}", accounts['asset']).
+                .get(API.Account, accounts['asset']).
                 then()
                 .assertThat().statusCode(200)
                 .assertThat().contentType("application/vnd.mdg+json")
@@ -96,7 +97,7 @@ class TransactionAccountSpecification extends Specification {
                 .contentType("application/vnd.mdg+json").
                 when()
                 .request().body(JsonOutput.toJson(transaction))
-                .post("/transaction").
+                .post(API.Transactions).
                 then()
                 .assertThat().statusCode(201)
                 .assertThat().contentType("application/vnd.mdg+json")
@@ -109,13 +110,13 @@ class TransactionAccountSpecification extends Specification {
                 .contentType("application/vnd.mdg+json").
                 when()
                 .request().body(JsonOutput.toJson(transaction))
-                .put("/transaction/{id}", txId)
+                .put(API.Transaction, txId)
 
         then: "Accounts balances should be changed"
         given()
                 .contentType("application/vnd.mdg+json").
                 when()
-                .get("/account/{id}", accounts['income']).
+                .get(API.Account, accounts['income']).
                 then()
                 .assertThat().statusCode(200)
                 .assertThat().contentType("application/vnd.mdg+json")
@@ -124,7 +125,7 @@ class TransactionAccountSpecification extends Specification {
         given()
                 .contentType("application/vnd.mdg+json").
                 when()
-                .get("/account/{id}", accounts['asset']).
+                .get(API.Account, accounts['asset']).
                 then()
                 .assertThat().statusCode(200)
                 .assertThat().contentType("application/vnd.mdg+json")
@@ -158,7 +159,7 @@ class TransactionAccountSpecification extends Specification {
                 .contentType("application/vnd.mdg+json").
                 when()
                 .request().body(JsonOutput.toJson(transaction))
-                .post("/transaction").
+                .post(API.Transactions).
                 then()
                 .assertThat().statusCode(201)
                 .assertThat().contentType("application/vnd.mdg+json")
@@ -166,14 +167,14 @@ class TransactionAccountSpecification extends Specification {
 
 
         when: "Transaction is deleted"
-        when().delete("/transaction/{id}", txId)
+        when().delete(API.Transaction, txId)
                 .then().assertThat().statusCode(204)
 
         then: "Accounts should have zero balance"
         given()
                 .contentType("application/vnd.mdg+json").
                 when()
-                .get("/account/{id}", accounts['income']).
+                .get(API.Account, accounts['income']).
                 then()
                 .assertThat().statusCode(200)
                 .assertThat().contentType("application/vnd.mdg+json")
@@ -182,7 +183,7 @@ class TransactionAccountSpecification extends Specification {
         given()
                 .contentType("application/vnd.mdg+json").
                 when()
-                .get("/account/{id}", accounts['asset']).
+                .get(API.Account, accounts['asset']).
                 then()
                 .assertThat().statusCode(200)
                 .assertThat().contentType("application/vnd.mdg+json")

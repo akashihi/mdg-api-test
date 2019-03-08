@@ -4,6 +4,7 @@ import com.jayway.jsonpath.JsonPath
 import groovy.json.JsonOutput
 import org.akashihi.mdg.apitest.fixtures.TransactionFixture
 import spock.lang.Specification
+import org.akashihi.mdg.apitest.API
 
 import static io.restassured.RestAssured.given
 import static io.restassured.RestAssured.when
@@ -25,7 +26,7 @@ class TransactionCountSpecification extends Specification {
         def initialResponse = given()
                 .contentType("application/vnd.mdg+json").
                 when()
-                .get("/transaction")
+                .get(API.Transactions)
         def initialBody =  JsonPath.parse(initialResponse.then()
                 .assertThat().statusCode(200)
                 .assertThat().contentType("application/vnd.mdg+json")
@@ -62,13 +63,13 @@ class TransactionCountSpecification extends Specification {
                 .contentType("application/vnd.mdg+json").
                 when()
                 .request().body(JsonOutput.toJson(transaction))
-                .post("/transaction")
+                .post(API.Transactions)
 
         then: "Transaction count is increased"
         def response = given()
                 .contentType("application/vnd.mdg+json").
                 when()
-                .get("/transaction")
+                .get(API.Transactions)
         def body =  JsonPath.parse(response.then()
                 .assertThat().statusCode(200)
                 .assertThat().contentType("application/vnd.mdg+json")
@@ -108,7 +109,7 @@ class TransactionCountSpecification extends Specification {
                 .contentType("application/vnd.mdg+json").
                 when()
                 .request().body(JsonOutput.toJson(transaction))
-                .post("/transaction").
+                .post(API.Transactions).
                 then()
                 .assertThat().statusCode(201)
                 .assertThat().contentType("application/vnd.mdg+json")
@@ -116,7 +117,7 @@ class TransactionCountSpecification extends Specification {
         def initialResponse = given()
                 .contentType("application/vnd.mdg+json").
                 when()
-                .get("/transaction")
+                .get(API.Transactions)
         def initialBody =  JsonPath.parse(initialResponse.then()
                 .assertThat().statusCode(200)
                 .assertThat().contentType("application/vnd.mdg+json")
@@ -132,13 +133,13 @@ class TransactionCountSpecification extends Specification {
                 .contentType("application/vnd.mdg+json").
                 when()
                 .request().body(JsonOutput.toJson(transaction))
-                .put("/transaction/{id}", txId)
+                .put(API.Transaction, txId)
 
         then: "Transaction count should not change"
         def response = given()
                 .contentType("application/vnd.mdg+json").
                 when()
-                .get("/transaction")
+                .get(API.Transactions)
         def body =  JsonPath.parse(response.then()
                 .assertThat().statusCode(200)
                 .assertThat().contentType("application/vnd.mdg+json")
@@ -153,7 +154,7 @@ class TransactionCountSpecification extends Specification {
         def initialResponse = given()
                 .contentType("application/vnd.mdg+json").
                 when()
-                .get("/transaction")
+                .get(API.Transactions)
         def initialBody =  JsonPath.parse(initialResponse.then()
                 .assertThat().statusCode(200)
                 .assertThat().contentType("application/vnd.mdg+json")
@@ -162,14 +163,14 @@ class TransactionCountSpecification extends Specification {
 
 
         when: "Transaction is deleted"
-        when().delete("/transaction/{id}", txId)
+        when().delete(API.Transaction, txId)
                 .then().assertThat().statusCode(204)
 
         then: "Transaction count should decrease"
         def response = given()
                 .contentType("application/vnd.mdg+json").
                 when()
-                .get("/transaction")
+                .get(API.Transactions)
         def body =  JsonPath.parse(response.then()
                 .assertThat().statusCode(200)
                 .assertThat().contentType("application/vnd.mdg+json")

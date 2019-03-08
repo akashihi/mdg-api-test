@@ -3,6 +3,7 @@ package org.akashihi.mdg.apitest.tests.budget
 import groovy.json.JsonOutput
 import org.akashihi.mdg.apitest.fixtures.BudgetFixture
 import spock.lang.Specification
+import org.akashihi.mdg.apitest.API
 
 import static io.restassured.RestAssured.given
 import static org.akashihi.mdg.apitest.apiConnectionBase.setupAPI
@@ -34,7 +35,7 @@ class BudgetValiditySpecification extends Specification {
                 .contentType("application/vnd.mdg+json").
                 when()
                 .request().body(JsonOutput.toJson(budget))
-                .post("/budget")
+                .post(API.Budgets)
 
 
         then: "It should not be accepted"
@@ -62,7 +63,7 @@ class BudgetValiditySpecification extends Specification {
                 .contentType("application/vnd.mdg+json").
                 when()
                 .request().body(JsonOutput.toJson(budget))
-                .post("/budget")
+                .post(API.Budgets)
 
 
         then: "It should not be accepted"
@@ -90,7 +91,7 @@ class BudgetValiditySpecification extends Specification {
                 .contentType("application/vnd.mdg+json").
                 when()
                 .request().body(JsonOutput.toJson(overlap))
-                .post("/budget")
+                .post(API.Budgets)
 
 
         then: "It should not be accepted"
@@ -118,7 +119,7 @@ class BudgetValiditySpecification extends Specification {
                 .contentType("application/vnd.mdg+json").
                 when()
                 .request().body(JsonOutput.toJson(overlap))
-                .post("/budget")
+                .post(API.Budgets)
 
 
         then: "It should not be accepted"
@@ -146,7 +147,7 @@ class BudgetValiditySpecification extends Specification {
                 .contentType("application/vnd.mdg+json").
                 when()
                 .request().body(JsonOutput.toJson(overlap))
-                .post("/budget")
+                .post(API.Budgets)
 
 
         then: "It should not be accepted"

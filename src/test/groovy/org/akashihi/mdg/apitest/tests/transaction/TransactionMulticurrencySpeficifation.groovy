@@ -4,6 +4,7 @@ import com.jayway.jsonpath.JsonPath
 import groovy.json.JsonOutput
 import org.akashihi.mdg.apitest.fixtures.TransactionFixture
 import spock.lang.Specification
+import org.akashihi.mdg.apitest.API
 
 import static io.restassured.RestAssured.given
 import static org.akashihi.mdg.apitest.apiConnectionBase.setupAPI
@@ -48,7 +49,7 @@ class TransactionMulticurrencySpeficifation extends Specification {
                 .contentType("application/vnd.mdg+json").
                 when()
                 .request().body(JsonOutput.toJson(transaction))
-                .post("/transaction")
+                .post(API.Transactions)
         def body = JsonPath.parse(response.
                 then()
                 .assertThat().statusCode(201)
@@ -67,7 +68,7 @@ class TransactionMulticurrencySpeficifation extends Specification {
         def listResponse = given()
                 .contentType("application/vnd.mdg+json").
                 when()
-                .get("/transaction")
+                .get(API.Transactions)
         def listBody =  JsonPath.parse(listResponse.then()
                 .assertThat().statusCode(200)
                 .assertThat().contentType("application/vnd.mdg+json")

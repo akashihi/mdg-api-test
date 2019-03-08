@@ -3,6 +3,7 @@ package org.akashihi.mdg.apitest.tests.setting
 import com.jayway.jsonpath.JsonPath
 import groovy.json.JsonOutput
 import spock.lang.Specification
+import org.akashihi.mdg.apitest.API
 
 import static io.restassured.RestAssured.given
 import static org.akashihi.mdg.apitest.apiConnectionBase.setupAPI
@@ -32,7 +33,7 @@ class CurrencyPrimarySpecification extends Specification {
         def response = given()
                 .contentType("application/vnd.mdg+json").
                 when()
-                .get("/setting")
+                .get(API.Settings)
 
         then: "Settings list should include primary currency"
         def body = JsonPath.parse(response.then()
@@ -51,7 +52,7 @@ class CurrencyPrimarySpecification extends Specification {
         def response = given()
                 .contentType("application/vnd.mdg+json").
                 when()
-                .get("/setting/{id}", "currency.primary")
+                .get(API.Setting, "currency.primary")
 
         then: "Setting object should be returned"
         response.then()
@@ -68,7 +69,7 @@ class CurrencyPrimarySpecification extends Specification {
                 .contentType("application/vnd.mdg+json")
                 .when()
                 .request().body(JsonOutput.toJson(setting))
-                .put("/setting/{id}", "currency.primary").
+                .put(API.Setting, "currency.primary").
                 then()
                 .assertThat().statusCode(202)
                 .assertThat().contentType("application/vnd.mdg+json")
@@ -78,7 +79,7 @@ class CurrencyPrimarySpecification extends Specification {
         given()
                 .contentType("application/vnd.mdg+json").
                 when()
-                .get("/setting/{id}", "currency.primary").
+                .get(API.Setting, "currency.primary").
                 then()
                 .assertThat().statusCode(200)
                 .assertThat().contentType("application/vnd.mdg+json")
@@ -97,7 +98,7 @@ class CurrencyPrimarySpecification extends Specification {
                 .contentType("application/vnd.mdg+json")
                 .when()
                 .request().body(JsonOutput.toJson(setting))
-                .put("/setting/{id}", "currency.primary")
+                .put(API.Setting, "currency.primary")
 
         then: "Update should be rejected."
         response.then()

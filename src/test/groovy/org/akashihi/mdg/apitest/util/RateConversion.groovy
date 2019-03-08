@@ -1,6 +1,7 @@
 package org.akashihi.mdg.apitest.util
 
 import com.jayway.jsonpath.JsonPath
+import org.akashihi.mdg.apitest.API
 
 import static io.restassured.RestAssured.given
 
@@ -12,7 +13,7 @@ class RateConversion {
         primaryCurrency = JsonPath.parse(given()
                 .contentType("application/vnd.mdg+json").
                 when()
-                .get("/setting/{id}", "currency.primary")
+                .get(API.Setting, "currency.primary")
                 .then()
                 .assertThat().statusCode(200)
                 .assertThat().contentType("application/vnd.mdg+json")
@@ -40,7 +41,7 @@ class RateConversion {
         return JsonPath.parse(given()
                 .contentType("application/vnd.mdg+json").
                 when()
-                .get("/account")
+                .get(API.Accounts)
                 .then()
                 .assertThat().statusCode(200)
                 .assertThat().contentType("application/vnd.mdg+json")

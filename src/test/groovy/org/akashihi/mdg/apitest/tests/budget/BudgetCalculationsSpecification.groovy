@@ -6,6 +6,7 @@ import org.akashihi.mdg.apitest.fixtures.BudgetFixture
 import org.akashihi.mdg.apitest.fixtures.TransactionFixture
 import org.akashihi.mdg.apitest.util.RateConversion
 import spock.lang.Specification
+import org.akashihi.mdg.apitest.API
 
 import static io.restassured.RestAssured.given
 import static org.akashihi.mdg.apitest.apiConnectionBase.setupAPI
@@ -44,7 +45,7 @@ class BudgetCalculationsSpecification extends Specification {
         def acountResponse = given()
                 .contentType("application/vnd.mdg+json").
                 when()
-                .get("/account")
+                .get(API.Accounts)
         def accountBody = JsonPath.parse(acountResponse.then()
                 .assertThat().statusCode(200)
                 .assertThat().contentType("application/vnd.mdg+json")
@@ -55,7 +56,7 @@ class BudgetCalculationsSpecification extends Specification {
                 .queryParam("notLater", '2017-04-01T00:00:00')
                 .contentType("application/vnd.mdg+json").
                 when()
-                .get("/transaction")
+                .get(API.Transactions)
 
         def txBody = JsonPath.parse(txResponse.then()
                 .assertThat().statusCode(200)
@@ -77,7 +78,7 @@ class BudgetCalculationsSpecification extends Specification {
         def response = given()
                 .contentType("application/vnd.mdg+json").
                 when()
-                .get("/budget/{id}", "20170401")
+                .get(API.Budget, "20170401")
 
 
         then: "Budget incoming amount should match sum of asset transactions"
@@ -96,7 +97,7 @@ class BudgetCalculationsSpecification extends Specification {
         def budgetResponse = given()
                 .contentType("application/vnd.mdg+json").
                 when()
-                .get("/budget/{id}", "20170401")
+                .get(API.Budget, "20170401")
         def budgetBody = JsonPath.parse(budgetResponse.then()
                 .assertThat().statusCode(200)
                 .assertThat().contentType("application/vnd.mdg+json")
@@ -130,7 +131,7 @@ class BudgetCalculationsSpecification extends Specification {
         def budgetResponse = given()
                 .contentType("application/vnd.mdg+json").
                 when()
-                .get("/budget/{id}", "20170401")
+                .get(API.Budget, "20170401")
         def budgetBody = JsonPath.parse(budgetResponse.then()
                 .assertThat().statusCode(200)
                 .assertThat().contentType("application/vnd.mdg+json")
@@ -182,7 +183,7 @@ class BudgetCalculationsSpecification extends Specification {
         def updatedResponse = given()
                 .contentType("application/vnd.mdg+json").
                 when()
-                .get("/budget/{id}", "20170401")
+                .get(API.Budget, "20170401")
         def updatedBody = JsonPath.parse(updatedResponse.then()
                 .assertThat().statusCode(200)
                 .assertThat().contentType("application/vnd.mdg+json")

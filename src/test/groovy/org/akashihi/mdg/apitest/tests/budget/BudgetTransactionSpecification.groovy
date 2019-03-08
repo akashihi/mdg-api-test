@@ -6,6 +6,7 @@ import org.akashihi.mdg.apitest.fixtures.BudgetFixture
 import org.akashihi.mdg.apitest.fixtures.TransactionFixture
 import org.akashihi.mdg.apitest.util.RateConversion
 import spock.lang.Specification
+import org.akashihi.mdg.apitest.API
 
 import static io.restassured.RestAssured.given
 import static io.restassured.RestAssured.when
@@ -62,7 +63,7 @@ class BudgetTransactionSpecification extends Specification {
         def budgetResponse = given()
                 .contentType("application/vnd.mdg+json").
                 when()
-                .get("/budget/{id}", "20170401")
+                .get(API.Budget, "20170401")
         def budgetBody = JsonPath.parse(budgetResponse.then()
                 .assertThat().statusCode(200)
                 .assertThat().contentType("application/vnd.mdg+json")
@@ -76,7 +77,7 @@ class BudgetTransactionSpecification extends Specification {
         def response = given()
                 .contentType("application/vnd.mdg+json").
                 when()
-                .get("/budget/{id}", "20170401")
+                .get(API.Budget, "20170401")
         def body = JsonPath.parse(response.then()
                 .assertThat().statusCode(200)
                 .assertThat().contentType("application/vnd.mdg+json")
@@ -96,7 +97,7 @@ class BudgetTransactionSpecification extends Specification {
         def budgetResponse = given()
                 .contentType("application/vnd.mdg+json").
                 when()
-                .get("/budget/{id}", "20170401")
+                .get(API.Budget, "20170401")
         def budgetBody = JsonPath.parse(budgetResponse.then()
                 .assertThat().statusCode(200)
                 .assertThat().contentType("application/vnd.mdg+json")
@@ -104,7 +105,7 @@ class BudgetTransactionSpecification extends Specification {
         def initialAmount = budgetBody.read("data.attributes.outgoing_amount.actual", BigDecimal.class)
 
         when: "Transaction is removed"
-        when().delete("/transaction/{id}", txId)
+        when().delete(API.Transaction, txId)
         .then().assertThat().statusCode(204)
 
 
@@ -112,7 +113,7 @@ class BudgetTransactionSpecification extends Specification {
         def response = given()
                 .contentType("application/vnd.mdg+json").
                 when()
-                .get("/budget/{id}", "20170401")
+                .get(API.Budget, "20170401")
         def body = JsonPath.parse(response.then()
                 .assertThat().statusCode(200)
                 .assertThat().contentType("application/vnd.mdg+json")
@@ -130,7 +131,7 @@ class BudgetTransactionSpecification extends Specification {
         def budgetResponse = given()
                 .contentType("application/vnd.mdg+json").
                 when()
-                .get("/budget/{id}", "20170401")
+                .get(API.Budget, "20170401")
         def budgetBody = JsonPath.parse(budgetResponse.then()
                 .assertThat().statusCode(200)
                 .assertThat().contentType("application/vnd.mdg+json")
@@ -145,14 +146,14 @@ class BudgetTransactionSpecification extends Specification {
                 .contentType("application/vnd.mdg+json").
                 when()
                 .request().body(JsonOutput.toJson(newTx))
-                .put("/transaction/{id}", txId)
+                .put(API.Transaction, txId)
 
 
         then: "Actual amount should change"
         def response = given()
                 .contentType("application/vnd.mdg+json").
                 when()
-                .get("/budget/{id}", "20170401")
+                .get(API.Budget, "20170401")
         def body = JsonPath.parse(response.then()
                 .assertThat().statusCode(200)
                 .assertThat().contentType("application/vnd.mdg+json")

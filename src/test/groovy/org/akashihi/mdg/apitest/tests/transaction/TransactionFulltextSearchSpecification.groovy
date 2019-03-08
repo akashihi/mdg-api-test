@@ -3,6 +3,7 @@ package org.akashihi.mdg.apitest.tests.transaction
 import com.jayway.jsonpath.JsonPath
 import org.akashihi.mdg.apitest.fixtures.TransactionFixture
 import spock.lang.Specification
+import org.akashihi.mdg.apitest.API
 
 import static io.restassured.RestAssured.given
 import static io.restassured.RestAssured.when
@@ -32,7 +33,7 @@ class TransactionFulltextSearchSpecification extends Specification {
                 .queryParam("filter", "{\"comment\": \"incme\"} ")
                 .contentType("application/vnd.mdg+json").
                 when()
-                .get("/transaction")
+                .get(API.Transactions)
 
         then: "Should return transactions, matching filter"
         def body = JsonPath.parse(response.then()
@@ -52,7 +53,7 @@ class TransactionFulltextSearchSpecification extends Specification {
                 .queryParam("filter", "{\"tag\": [\"trnsaction\"]} ")
                 .contentType("application/vnd.mdg+json").
                 when()
-                .get("/transaction")
+                .get(API.Transactions)
 
         then: "Should only return transactions, matching filter"
         def body = JsonPath.parse(response.then()

@@ -3,6 +3,7 @@ package org.akashihi.mdg.apitest.tests.account
 import com.jayway.jsonpath.JsonPath
 import groovy.json.JsonOutput
 import spock.lang.Specification
+import org.akashihi.mdg.apitest.API
 
 import static io.restassured.RestAssured.given
 import static org.akashihi.mdg.apitest.apiConnectionBase.setupAPI
@@ -36,7 +37,7 @@ class AccountSpecification extends Specification {
                 .contentType("application/vnd.mdg+json").
                 when()
                 .request().body(JsonOutput.toJson(account))
-                .post("/account").
+                .post(API.Accounts).
                 then()
                 .assertThat().statusCode(201)
                 .assertThat().contentType("application/vnd.mdg+json")
@@ -51,7 +52,7 @@ class AccountSpecification extends Specification {
         def response = given()
                 .contentType("application/vnd.mdg+json").
                 when()
-                .get("/account")
+                .get(API.Accounts)
         def body = JsonPath.parse(response.then()
                 .assertThat().statusCode(200)
                 .assertThat().contentType("application/vnd.mdg+json")
@@ -70,7 +71,7 @@ class AccountSpecification extends Specification {
                 .contentType("application/vnd.mdg+json").
                 when()
                 .request().body(JsonOutput.toJson(account))
-                .post("/account").
+                .post(API.Accounts).
                 then()
                 .assertThat().statusCode(201)
                 .extract().path("data.id")
@@ -79,7 +80,7 @@ class AccountSpecification extends Specification {
         def response = given()
                 .contentType("application/vnd.mdg+json").
                 when()
-                .get("/account/{id}", accountId)
+                .get(API.Account, accountId)
 
         then: "Account object should be returned"
         response.then()
@@ -97,7 +98,7 @@ class AccountSpecification extends Specification {
                 .contentType("application/vnd.mdg+json").
                 when()
                 .request().body(JsonOutput.toJson(account))
-                .post("/account").
+                .post(API.Accounts).
                 then()
                 .assertThat().statusCode(201)
                 .extract().path("data.id")
@@ -109,7 +110,7 @@ class AccountSpecification extends Specification {
                 .contentType("application/vnd.mdg+json")
                 .when()
                 .request().body(JsonOutput.toJson(modifiedAccount))
-                .put("/account/{id}", accountId).
+                .put(API.Account, accountId).
                 then()
                 .assertThat().statusCode(202)
                 .assertThat().contentType("application/vnd.mdg+json")
@@ -119,7 +120,7 @@ class AccountSpecification extends Specification {
         given()
                 .contentType("application/vnd.mdg+json").
                 when()
-                .get("/account/{id}", accountId).
+                .get(API.Account, accountId).
                 then()
                 .assertThat().statusCode(200)
                 .assertThat().contentType("application/vnd.mdg+json")

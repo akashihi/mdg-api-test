@@ -3,6 +3,7 @@ package org.akashihi.mdg.apitest.tests.category
 import com.jayway.jsonpath.JsonPath
 import groovy.json.JsonOutput
 import spock.lang.Specification
+import org.akashihi.mdg.apitest.API
 
 import static io.restassured.RestAssured.given
 import static org.akashihi.mdg.apitest.apiConnectionBase.setupAPI
@@ -34,7 +35,7 @@ class CategorySpecification extends Specification {
                 .contentType("application/vnd.mdg+json").
                 when()
                 .request().body(JsonOutput.toJson(category))
-                .post("/category").
+                .post(API.Categories).
                 then()
                 .assertThat().statusCode(201)
                 .assertThat().contentType("application/vnd.mdg+json")
@@ -49,7 +50,7 @@ class CategorySpecification extends Specification {
         def response = given()
                 .contentType("application/vnd.mdg+json").
                 when()
-                .get("/category")
+                .get(API.Categories)
         def body = JsonPath.parse(response.then()
                 .assertThat().statusCode(200)
                 .assertThat().contentType("application/vnd.mdg+json")
@@ -68,7 +69,7 @@ class CategorySpecification extends Specification {
                 .contentType("application/vnd.mdg+json").
                 when()
                 .request().body(JsonOutput.toJson(category))
-                .post("/category").
+                .post(API.Categories).
                 then()
                 .assertThat().statusCode(201)
                 .extract().path("data.id")
@@ -77,7 +78,7 @@ class CategorySpecification extends Specification {
         def response = given()
                 .contentType("application/vnd.mdg+json").
                 when()
-                .get("/category/{id}", categoryId)
+                .get(API.Category, categoryId)
 
         then: "Category object should be returned"
         response.then()
@@ -95,7 +96,7 @@ class CategorySpecification extends Specification {
                 .contentType("application/vnd.mdg+json").
                 when()
                 .request().body(JsonOutput.toJson(category))
-                .post("/category").
+                .post(API.Categories).
                 then()
                 .assertThat().statusCode(201)
                 .extract().path("data.id")
@@ -108,7 +109,7 @@ class CategorySpecification extends Specification {
                 .contentType("application/vnd.mdg+json")
                 .when()
                 .request().body(JsonOutput.toJson(modifiedCategory))
-                .put("/category/{id}", categoryId).
+                .put(API.Category, categoryId).
                 then()
                 .assertThat().statusCode(202)
                 .assertThat().contentType("application/vnd.mdg+json")
@@ -119,7 +120,7 @@ class CategorySpecification extends Specification {
         given()
                 .contentType("application/vnd.mdg+json").
                 when()
-                .get("/category/{id}", categoryId).
+                .get(API.Category, categoryId).
                 then()
                 .assertThat().statusCode(200)
                 .assertThat().contentType("application/vnd.mdg+json")
@@ -135,7 +136,7 @@ class CategorySpecification extends Specification {
                 .contentType("application/vnd.mdg+json").
                 when()
                 .request().body(JsonOutput.toJson(category))
-                .post("/category").
+                .post(API.Categories).
                 then()
                 .assertThat().statusCode(201)
                 .extract().path("data.id")
@@ -144,7 +145,7 @@ class CategorySpecification extends Specification {
         given()
                 .contentType("application/vnd.mdg+json").
                 when()
-                .delete("/category/{id}", categoryId)
+                .delete(API.Category, categoryId)
                 .then()
                 .assertThat().statusCode(204)
 
@@ -153,7 +154,7 @@ class CategorySpecification extends Specification {
         def response = given()
                 .contentType("application/vnd.mdg+json").
                 when()
-                .get("/category")
+                .get(API.Categories)
         def body = JsonPath.parse(response.then()
                 .assertThat().statusCode(200)
                 .assertThat().contentType("application/vnd.mdg+json")

@@ -3,6 +3,7 @@ package org.akashihi.mdg.apitest.tests.transaction
 import com.jayway.jsonpath.JsonPath
 import groovy.json.JsonOutput
 import org.akashihi.mdg.apitest.fixtures.TransactionFixture
+import org.akashihi.mdg.apitest.API
 import spock.lang.*
 
 import java.time.LocalDate
@@ -29,7 +30,7 @@ class TransactionFilterSpecification extends Specification {
                 .queryParam("sort", "timestamp")
                 .contentType("application/vnd.mdg+json").
                 when()
-                .get("/transaction")
+                .get(API.Transactions)
 
         then: "Every timestamp in returned list should be equal or less then previous"
         def body = JsonPath.parse(response.then()
@@ -53,7 +54,7 @@ class TransactionFilterSpecification extends Specification {
                 .queryParam("notEarlier", '2017-02-06T00:00:00')
                 .contentType("application/vnd.mdg+json").
                 when()
-                .get("/transaction")
+                .get(API.Transactions)
 
         then: "Every timestamp in returned list should be equal or greater then specified"
         def body = JsonPath.parse(response.then()
@@ -75,7 +76,7 @@ class TransactionFilterSpecification extends Specification {
                 .queryParam("notLater", '2017-02-05T00:00:00')
                 .contentType("application/vnd.mdg+json").
                 when()
-                .get("/transaction")
+                .get(API.Transactions)
 
         then: "Every timestamp in returned list should be equal or less then specified"
         def body = JsonPath.parse(response.then()
@@ -98,7 +99,7 @@ class TransactionFilterSpecification extends Specification {
                 .queryParam("notLater", '2017-02-06T00:00:00')
                 .contentType("application/vnd.mdg+json").
                 when()
-                .get("/transaction")
+                .get(API.Transactions)
 
         then: "Every timestamp in returned list should be equal to specified"
         def body = JsonPath.parse(response.then()
@@ -121,7 +122,7 @@ class TransactionFilterSpecification extends Specification {
                 .queryParam("sort", "-timestamp")
                 .contentType("application/vnd.mdg+json").
                 when()
-                .get("/transaction")
+                .get(API.Transactions)
 
         then: "Every timestamp in returned list should be equal or less then previous"
         def body = JsonPath.parse(response.then()
@@ -167,7 +168,7 @@ class TransactionFilterSpecification extends Specification {
                 .contentType("application/vnd.mdg+json").
                 when()
                 .request().body(JsonOutput.toJson(transaction))
-                .post("/transaction").
+                .post(API.Transactions).
                 then()
                 .assertThat().statusCode(201)
                 .assertThat().contentType("application/vnd.mdg+json")
@@ -179,7 +180,7 @@ class TransactionFilterSpecification extends Specification {
                 .queryParam("filter", "{\"account_id\": [${asset_account_id}]} ")
                 .contentType("application/vnd.mdg+json").
                 when()
-                .get("/transaction")
+                .get(API.Transactions)
 
         then: "Should only return transactions, matching filter"
         def body = JsonPath.parse(response.then()

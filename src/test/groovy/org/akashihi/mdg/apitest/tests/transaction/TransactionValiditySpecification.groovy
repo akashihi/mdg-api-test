@@ -3,6 +3,7 @@ package org.akashihi.mdg.apitest.tests.transaction
 import groovy.json.JsonOutput
 import org.akashihi.mdg.apitest.fixtures.TransactionFixture
 import spock.lang.Specification
+import org.akashihi.mdg.apitest.API
 
 import static io.restassured.RestAssured.given
 import static org.akashihi.mdg.apitest.apiConnectionBase.setupAPI
@@ -36,7 +37,7 @@ class TransactionValiditySpecification extends Specification {
                 .contentType("application/vnd.mdg+json").
                 when()
                 .request().body(JsonOutput.toJson(transaction))
-                .post("/transaction")
+                .post(API.Transactions)
         then: "Error should be returned"
         response.then()
                 .assertThat().statusCode(412)
@@ -73,7 +74,7 @@ class TransactionValiditySpecification extends Specification {
                 .contentType("application/vnd.mdg+json").
                 when()
                 .request().body(JsonOutput.toJson(transaction))
-                .post("/transaction")
+                .post(API.Transactions)
         then: "Error should be returned"
         response.then()
                 .assertThat().statusCode(412)
@@ -110,7 +111,7 @@ class TransactionValiditySpecification extends Specification {
                 .contentType("application/vnd.mdg+json").
                 when()
                 .request().body(JsonOutput.toJson(transaction))
-                .post("/transaction")
+                .post(API.Transactions)
         then: "Error should be returned"
         response.then()
                 .assertThat().statusCode(412)

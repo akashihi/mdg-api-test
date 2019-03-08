@@ -4,6 +4,7 @@ import com.jayway.jsonpath.JsonPath
 import groovy.json.JsonOutput
 import org.akashihi.mdg.apitest.fixtures.TotalsReportFixture
 import spock.lang.Specification
+import org.akashihi.mdg.apitest.API
 
 import static io.restassured.RestAssured.given
 import static org.akashihi.mdg.apitest.apiConnectionBase.setupAPI
@@ -51,7 +52,7 @@ class TotalsReportSpecification extends Specification {
                 .contentType("application/vnd.mdg+json").
                 when()
                 .request().body(JsonOutput.toJson(transaction))
-                .post("/transaction").
+                .post(API.Transactions).
                 then()
                 .assertThat().statusCode(201)
 

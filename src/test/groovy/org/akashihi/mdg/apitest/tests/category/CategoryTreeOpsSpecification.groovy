@@ -3,6 +3,7 @@ package org.akashihi.mdg.apitest.tests.category
 import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
 import spock.lang.Specification
+import org.akashihi.mdg.apitest.API
 
 import static io.restassured.RestAssured.given
 import static org.akashihi.mdg.apitest.apiConnectionBase.setupAPI
@@ -55,7 +56,7 @@ class CategoryTreeOpsSpecification extends Specification {
                 .contentType("application/vnd.mdg+json").
                 when()
                 .request().body(JsonOutput.toJson(outer))
-                .post("/category").
+                .post(API.Categories).
                 then()
                 .assertThat().statusCode(201)
                 .extract().path("data.id")
@@ -65,7 +66,7 @@ class CategoryTreeOpsSpecification extends Specification {
                 .contentType("application/vnd.mdg+json").
                 when()
                 .request().body(JsonOutput.toJson(middleCategory))
-                .post("/category").
+                .post(API.Categories).
                 then()
                 .assertThat().statusCode(201)
                 .extract().path("data.id")
@@ -75,7 +76,7 @@ class CategoryTreeOpsSpecification extends Specification {
                 .contentType("application/vnd.mdg+json").
                 when()
                 .request().body(JsonOutput.toJson(innerCategory))
-                .post("/category").
+                .post(API.Categories).
                 then()
                 .assertThat().statusCode(201)
                 .extract().path("data.id")
@@ -93,7 +94,7 @@ class CategoryTreeOpsSpecification extends Specification {
                 when()
                 .log().all()
                 .request().body(JsonOutput.toJson(outer))
-                .post("/category").
+                .post(API.Categories).
                 then()
                 .log().all()
                 .assertThat().statusCode(201)
@@ -106,7 +107,7 @@ class CategoryTreeOpsSpecification extends Specification {
                 .contentType("application/vnd.mdg+json").
                 when()
                 .request().body(JsonOutput.toJson(middleCategory))
-                .post("/category").
+                .post(API.Categories).
                 then()
                 .assertThat().statusCode(201)
                 .extract().path("data.id")
@@ -116,7 +117,7 @@ class CategoryTreeOpsSpecification extends Specification {
                 .contentType("application/vnd.mdg+json").
                 when()
                 .request().body(JsonOutput.toJson(innerCategory))
-                .post("/category").
+                .post(API.Categories).
                 then()
                 .assertThat().statusCode(201)
                 .extract().path("data.id")
@@ -125,7 +126,7 @@ class CategoryTreeOpsSpecification extends Specification {
         def json = given()
                 .contentType("application/vnd.mdg+json").
                 when()
-                .get("/category/{id}", outerId)
+                .get(API.Category, outerId)
                 .then()
                 .assertThat().statusCode(200)
                 .assertThat().contentType("application/vnd.mdg+json")
@@ -148,7 +149,7 @@ class CategoryTreeOpsSpecification extends Specification {
                 .contentType("application/vnd.mdg+json")
                 .when()
                 .request().body(JsonOutput.toJson(innerCategory))
-                .put("/category/{id}", ids['inner']).
+                .put(API.Category, ids['inner']).
                 then()
                 .assertThat().statusCode(202)
                 .assertThat().contentType("application/vnd.mdg+json")
@@ -157,7 +158,7 @@ class CategoryTreeOpsSpecification extends Specification {
         def json = given()
                 .contentType("application/vnd.mdg+json").
                 when()
-                .get("/category/{id}", ids['outer']).
+                .get(API.Category, ids['outer']).
                 then()
                 .assertThat().statusCode(200)
                 .assertThat().contentType("application/vnd.mdg+json")
@@ -181,7 +182,7 @@ class CategoryTreeOpsSpecification extends Specification {
                 .contentType("application/vnd.mdg+json")
                 .when()
                 .request().body(JsonOutput.toJson(outerCategory))
-                .put("/category/{id}", ids['outer'])
+                .put(API.Category, ids['outer'])
         then: 'Cycle is prevented and error is returned'
         response.then()
                 .assertThat().statusCode(412)
@@ -199,7 +200,7 @@ class CategoryTreeOpsSpecification extends Specification {
                 .contentType("application/vnd.mdg+json")
                 .when()
                 .request().body(JsonOutput.toJson(middleCategory))
-                .put("/category/{id}", ids['middle']).
+                .put(API.Category, ids['middle']).
                 then()
                 .assertThat().statusCode(202)
                 .assertThat().contentType("application/vnd.mdg+json")
@@ -208,7 +209,7 @@ class CategoryTreeOpsSpecification extends Specification {
         def json = given()
                 .contentType("application/vnd.mdg+json").
                 when()
-                .get("/category/{id}", ids['middle']).
+                .get(API.Category, ids['middle']).
                 then()
                 .assertThat().statusCode(200)
                 .assertThat().contentType("application/vnd.mdg+json")
@@ -231,7 +232,7 @@ class CategoryTreeOpsSpecification extends Specification {
                 .contentType("application/vnd.mdg+json").
                 when()
                 .request().body(JsonOutput.toJson(otherCategory))
-                .post("/category")
+                .post(API.Categories)
 
         then: 'Reparenting is declined'
         response.then()
@@ -253,7 +254,7 @@ class CategoryTreeOpsSpecification extends Specification {
                 .contentType("application/vnd.mdg+json")
                 .when()
                 .request().body(JsonOutput.toJson(otherCategory))
-                .post("/category")
+                .post(API.Categories)
         then: "Creation should be declined"
                 response.then()
                 .assertThat().statusCode(412)

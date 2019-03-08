@@ -6,6 +6,7 @@ import org.akashihi.mdg.apitest.fixtures.BudgetFixture
 import org.akashihi.mdg.apitest.fixtures.TransactionFixture
 import org.akashihi.mdg.apitest.util.RateConversion
 import spock.lang.Specification
+import org.akashihi.mdg.apitest.API
 
 import static io.restassured.RestAssured.given
 import static org.akashihi.mdg.apitest.apiConnectionBase.setupAPI
@@ -33,7 +34,7 @@ class BudgetStateSpecification extends Specification {
         def budgetResponse = given()
                 .contentType("application/vnd.mdg+json").
                 when()
-                .get("/budget/{id}", "20161201")
+                .get(API.Budget, "20161201")
         def budgetBody = JsonPath.parse(budgetResponse.then()
                 .assertThat().statusCode(200)
                 .assertThat().contentType("application/vnd.mdg+json")
@@ -66,7 +67,7 @@ class BudgetStateSpecification extends Specification {
         def updatedResponse = given()
                 .contentType("application/vnd.mdg+json").
                 when()
-                .get("/budget/{id}", "20161201")
+                .get(API.Budget, "20161201")
         def updatedBody = JsonPath.parse(updatedResponse.then()
                 .assertThat().statusCode(200)
                 .assertThat().contentType("application/vnd.mdg+json")
@@ -82,7 +83,7 @@ class BudgetStateSpecification extends Specification {
         def budgetResponse = given()
                 .contentType("application/vnd.mdg+json").
                 when()
-                .get("/budget/{id}", "20161201")
+                .get(API.Budget, "20161201")
         def budgetBody = JsonPath.parse(budgetResponse.then()
                 .assertThat().statusCode(200)
                 .assertThat().contentType("application/vnd.mdg+json")
@@ -118,7 +119,7 @@ class BudgetStateSpecification extends Specification {
         def updatedResponse = given()
                 .contentType("application/vnd.mdg+json").
                 when()
-                .get("/budget/{id}", "20161201")
+                .get(API.Budget, "20161201")
         def updatedBody = JsonPath.parse(updatedResponse.then()
                 .assertThat().statusCode(200)
                 .assertThat().contentType("application/vnd.mdg+json")
@@ -134,7 +135,7 @@ class BudgetStateSpecification extends Specification {
         def budgetResponse = given()
                 .contentType("application/vnd.mdg+json").
                 when()
-                .get("/budget/{id}", "20161201")
+                .get(API.Budget, "20161201")
         def budgetBody = JsonPath.parse(budgetResponse.then()
                 .assertThat().statusCode(200)
                 .assertThat().contentType("application/vnd.mdg+json")
@@ -167,7 +168,7 @@ class BudgetStateSpecification extends Specification {
         def updatedResponse = given()
                 .contentType("application/vnd.mdg+json").
                 when()
-                .get("/budget/{id}", "20161201")
+                .get(API.Budget, "20161201")
         def updatedBody = JsonPath.parse(updatedResponse.then()
                 .assertThat().statusCode(200)
                 .assertThat().contentType("application/vnd.mdg+json")
@@ -183,7 +184,7 @@ class BudgetStateSpecification extends Specification {
         def budgetResponse = given()
                 .contentType("application/vnd.mdg+json").
                 when()
-                .get("/budget/{id}", "20161201")
+                .get(API.Budget, "20161201")
         def budgetBody = JsonPath.parse(budgetResponse.then()
                 .assertThat().statusCode(200)
                 .assertThat().contentType("application/vnd.mdg+json")
@@ -219,7 +220,7 @@ class BudgetStateSpecification extends Specification {
         def updatedResponse = given()
                 .contentType("application/vnd.mdg+json").
                 when()
-                .get("/budget/{id}", "20161201")
+                .get(API.Budget, "20161201")
         def updatedBody = JsonPath.parse(updatedResponse.then()
                 .assertThat().statusCode(200)
                 .assertThat().contentType("application/vnd.mdg+json")

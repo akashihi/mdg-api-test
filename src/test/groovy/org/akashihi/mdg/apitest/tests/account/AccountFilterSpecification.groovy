@@ -3,6 +3,7 @@ package org.akashihi.mdg.apitest.tests.account
 import com.jayway.jsonpath.JsonPath
 import groovy.json.JsonOutput
 import spock.lang.Specification
+import org.akashihi.mdg.apitest.API
 
 import static io.restassured.RestAssured.given
 import static io.restassured.RestAssured.when
@@ -32,14 +33,14 @@ class AccountFilterSpecification extends Specification {
                 .contentType("application/vnd.mdg+json").
                 when()
                 .request().body(JsonOutput.toJson(account))
-                .post("/account").
+                .post(API.Accounts).
                 then()
                 .assertThat().statusCode(201)
                 .extract().path("data.id")
 
         when: "Account is deleted"
         when()
-                .delete("/account/{id}", accountId).
+                .delete(API.Account, accountId).
                 then()
                 .assertThat().statusCode(204)
 
@@ -47,7 +48,7 @@ class AccountFilterSpecification extends Specification {
         def response = given()
                 .contentType("application/vnd.mdg+json").
                 when()
-                .get("/account")
+                .get(API.Accounts)
         def body = JsonPath.parse(response
                 .then()
                 .assertThat().statusCode(200)
@@ -63,14 +64,14 @@ class AccountFilterSpecification extends Specification {
                 .contentType("application/vnd.mdg+json").
                 when()
                 .request().body(JsonOutput.toJson(account))
-                .post("/account").
+                .post(API.Accounts).
                 then()
                 .assertThat().statusCode(201)
                 .extract().path("data.id")
 
         when: "Account is deleted"
         when()
-                .delete("/account/{id}", accountId).
+                .delete(API.Account, accountId).
                 then()
                 .assertThat().statusCode(204)
 
@@ -79,7 +80,7 @@ class AccountFilterSpecification extends Specification {
                 .queryParam("filter", "{\"hidden\":true}")
                 .contentType("application/vnd.mdg+json").
                 when()
-                .get("/account")
+                .get(API.Accounts)
         def body = JsonPath.parse(response
                 .then()
                 .assertThat().statusCode(200)
@@ -96,14 +97,14 @@ class AccountFilterSpecification extends Specification {
                 .contentType("application/vnd.mdg+json").
                 when()
                 .request().body(JsonOutput.toJson(account))
-                .post("/account").
+                .post(API.Accounts).
                 then()
                 .assertThat().statusCode(201)
                 .extract().path("data.id")
 
         when: "Account is deleted"
         when()
-                .delete("/account/{id}", accountId).
+                .delete(API.Account, accountId).
                 then()
                 .assertThat().statusCode(204)
 
@@ -112,7 +113,7 @@ class AccountFilterSpecification extends Specification {
                 .queryParam("filter", "{\"hidden\":false}")
                 .contentType("application/vnd.mdg+json").
                 when()
-                .get("/account")
+                .get(API.Accounts)
         def body = JsonPath.parse(response
                 .then()
                 .assertThat().statusCode(200)
@@ -130,7 +131,7 @@ class AccountFilterSpecification extends Specification {
                 .contentType("application/vnd.mdg+json").
                 when()
                 .request().body(JsonOutput.toJson(modifiedAccount))
-                .post("/account").
+                .post(API.Accounts).
                 then()
                 .assertThat().statusCode(201)
                 .extract().path("data.id")
@@ -140,7 +141,7 @@ class AccountFilterSpecification extends Specification {
                 .queryParam("filter", "{\"name\":\"FilterMe\"}")
                 .contentType("application/vnd.mdg+json").
                 when()
-                .get("/account")
+                .get(API.Accounts)
 
         then: "List should consist only of objects with specified ane"
         def body = JsonPath.parse(response
