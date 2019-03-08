@@ -20,4 +20,7 @@ public final class API {
 
     public static final String Budgets = "/budget";
     public static final String Budget = "/budget/{id}";
+
+    public static final String BudgetEntries = "/budget/{id}/entry";
+    public static final String BudgetEntry = "/budget/{id}/entry/{entryId}";
 }

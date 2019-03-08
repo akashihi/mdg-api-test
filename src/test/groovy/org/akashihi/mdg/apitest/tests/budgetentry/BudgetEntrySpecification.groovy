@@ -35,7 +35,7 @@ class BudgetEntrySpecification extends Specification {
         def listResponse = given()
                 .contentType("application/vnd.mdg+json").
                 when()
-                .get("/budget/20170301/entry")
+                .get(API.BudgetEntries, "20170301")
 
         then: 'BudgetEntries for non-asset accounts should be in the list'
         def listBody =  JsonPath.parse(listResponse.then()
@@ -66,7 +66,7 @@ class BudgetEntrySpecification extends Specification {
         def listResponse = given()
                 .contentType("application/vnd.mdg+json").
                 when()
-                .get("/budget/20170301/entry")
+                .get(API.BudgetEntries, "20170301")
 
         then: 'BudgetEntries for newly created accounts should be in the list'
         def listBody =  JsonPath.parse(listResponse.then()
@@ -94,7 +94,7 @@ class BudgetEntrySpecification extends Specification {
         def listResponse = given()
                 .contentType("application/vnd.mdg+json").
                 when()
-                .get("/budget/20170301/entry")
+                .get(API.BudgetEntries, "20170301")
         def listBody =  JsonPath.parse(listResponse.then()
                 .assertThat().statusCode(200)
                 .assertThat().contentType("application/vnd.mdg+json")
@@ -105,7 +105,7 @@ class BudgetEntrySpecification extends Specification {
         def response = given()
                 .contentType("application/vnd.mdg+json").
                 when()
-                .get("/budget/20170301/entry/{id}", entryId)
+                .get(API.BudgetEntry, "20170301", entryId)
 
         then: "Entry should be returned"
         def body = JsonPath.parse(response.then()
@@ -122,7 +122,7 @@ class BudgetEntrySpecification extends Specification {
         def listResponse = given()
                 .contentType("application/vnd.mdg+json").
                 when()
-                .get("/budget/20170301/entry")
+                .get(API.BudgetEntries, "20170301")
         def listBody =  JsonPath.parse(listResponse.then()
                 .assertThat().statusCode(200)
                 .assertThat().contentType("application/vnd.mdg+json")
@@ -142,7 +142,7 @@ class BudgetEntrySpecification extends Specification {
                 .contentType("application/vnd.mdg+json")
                 .when()
                 .request().body(JsonOutput.toJson(newEntry))
-                .put("/budget/20170301/entry/{id}", entryId).
+                .put(API.BudgetEntry, "20170301", entryId).
                 then()
                 .assertThat().statusCode(202)
                 .assertThat().contentType("application/vnd.mdg+json")
@@ -152,7 +152,7 @@ class BudgetEntrySpecification extends Specification {
         def response = given()
                 .contentType("application/vnd.mdg+json").
                 when()
-                .get("/budget/20170301/entry/{id}", entryId)
+                .get(API.BudgetEntry, "20170301", entryId)
 
         def body = JsonPath.parse(response.then()
                 .assertThat().statusCode(200)
@@ -167,7 +167,7 @@ class BudgetEntrySpecification extends Specification {
         def listResponse = given()
                 .contentType("application/vnd.mdg+json").
                 when()
-                .get("/budget/20170301/entry")
+                .get(API.BudgetEntries, "20170301")
         def listBody =  JsonPath.parse(listResponse.then()
                 .assertThat().statusCode(200)
                 .assertThat().contentType("application/vnd.mdg+json")
@@ -188,7 +188,7 @@ class BudgetEntrySpecification extends Specification {
                 .contentType("application/vnd.mdg+json")
                 .when()
                 .request().body(JsonOutput.toJson(newEntry))
-                .put("/budget/20170301/entry/{id}", entryId).
+                .put(API.BudgetEntry, "20170301", entryId).
                 then()
                 .assertThat().statusCode(202)
                 .assertThat().contentType("application/vnd.mdg+json")
@@ -199,7 +199,7 @@ class BudgetEntrySpecification extends Specification {
         def response = given()
                 .contentType("application/vnd.mdg+json").
                 when()
-                .get("/budget/20170301/entry/{id}", entryId)
+                .get(API.BudgetEntry, "20170301", entryId)
 
         def body = JsonPath.parse(response.then()
                 .assertThat().statusCode(200)

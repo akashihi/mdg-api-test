@@ -48,7 +48,7 @@ class BudgetStateSpecification extends Specification {
         def listResponse = given()
                 .contentType("application/vnd.mdg+json").
                 when()
-                .get("/budget/20161201/entry")
+                .get(API.BudgetEntries,"20161201")
         def listBody =  JsonPath.parse(listResponse.then()
                 .assertThat().statusCode(200)
                 .assertThat().contentType("application/vnd.mdg+json")
@@ -59,7 +59,7 @@ class BudgetStateSpecification extends Specification {
                 .contentType("application/vnd.mdg+json")
                 .when()
                 .request().body(JsonOutput.toJson(["data": entry]))
-                .put("/budget/20161201/entry/{id}", entry.id).
+                .put(API.BudgetEntry,"20161201", entry.id).
                 then()
                 .assertThat().statusCode(202)
 
@@ -149,7 +149,7 @@ class BudgetStateSpecification extends Specification {
         def listResponse = given()
                 .contentType("application/vnd.mdg+json").
                 when()
-                .get("/budget/20161201/entry")
+                .get(API.BudgetEntries,"20161201")
         def listBody =  JsonPath.parse(listResponse.then()
                 .assertThat().statusCode(200)
                 .assertThat().contentType("application/vnd.mdg+json")
@@ -160,7 +160,7 @@ class BudgetStateSpecification extends Specification {
                 .contentType("application/vnd.mdg+json")
                 .when()
                 .request().body(JsonOutput.toJson(["data": entry]))
-                .put("/budget/20161201/entry/{id}", entry.id).
+                .put(API.BudgetEntry,"20161201", entry.id).
                 then()
                 .assertThat().statusCode(202)
 

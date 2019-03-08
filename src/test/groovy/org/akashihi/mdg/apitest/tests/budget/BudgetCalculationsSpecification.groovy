@@ -109,7 +109,7 @@ class BudgetCalculationsSpecification extends Specification {
         def listResponse = given()
                 .contentType("application/vnd.mdg+json").
                 when()
-                .get("/budget/20170401/entry")
+                .get(API.BudgetEntries,"20170401")
 
         def listBody =  JsonPath.parse(listResponse.then()
                 .assertThat().statusCode(200)
@@ -142,7 +142,7 @@ class BudgetCalculationsSpecification extends Specification {
         def listResponse = given()
                 .contentType("application/vnd.mdg+json").
                 when()
-                .get("/budget/20170401/entry")
+                .get(API.BudgetEntries,"20170401")
         def listBody =  JsonPath.parse(listResponse.then()
                 .assertThat().statusCode(200)
                 .assertThat().contentType("application/vnd.mdg+json")
@@ -151,7 +151,7 @@ class BudgetCalculationsSpecification extends Specification {
         def entryResponse = given()
                 .contentType("application/vnd.mdg+json").
                 when()
-                .get("/budget/20170401/entry/{id}", entryId)
+                .get(API.BudgetEntry,"20170401", entryId)
 
         def entryBody = JsonPath.parse(entryResponse.then()
                 .assertThat().statusCode(200)
@@ -175,7 +175,7 @@ class BudgetCalculationsSpecification extends Specification {
                 .contentType("application/vnd.mdg+json")
                 .when()
                 .request().body(JsonOutput.toJson(newEntry))
-                .put("/budget/20170301/entry/{id}", entryId).
+                .put(API.BudgetEntry,"20170301", entryId).
                 then()
                 .assertThat().statusCode(202)
 
