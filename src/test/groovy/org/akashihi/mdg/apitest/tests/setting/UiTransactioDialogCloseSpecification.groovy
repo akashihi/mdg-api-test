@@ -1,6 +1,5 @@
 package org.akashihi.mdg.apitest.tests.setting
 
-import com.jayway.jsonpath.JsonPath
 import groovy.json.JsonOutput
 import spock.lang.Specification
 import org.akashihi.mdg.apitest.API
@@ -11,13 +10,11 @@ import static org.akashihi.mdg.apitest.apiConnectionBase.modifySpec
 import static org.akashihi.mdg.apitest.apiConnectionBase.readSpec
 import static org.akashihi.mdg.apitest.apiConnectionBase.setupAPI
 import static org.hamcrest.Matchers.*
-import static org.junit.Assert.assertFalse
-import static org.junit.Assert.assertThat
 
 class UiTransactioDialogCloseSpecification extends Specification {
-    String SETTING_NAME = "ui.transaction.closedialog"
+    static String SETTING_NAME = "ui.transaction.closedialog"
 
-    def setting = [
+    static def setting = [
             "data": [
                     "type"      : "setting",
                     "id"        : "ui.transaction.closedialog",
@@ -31,24 +28,12 @@ class UiTransactioDialogCloseSpecification extends Specification {
         setupAPI()
     }
 
-    def "User lists settings"() {
-        when: "Settings lists is retrieved"
-        def response = when().get(API.Settings)
-
-        then: "Settings list should include close dialog"
-        response.then().spec(readSpec())
-                .body("data", not(empty()))
-                .body("data.findAll {it.id=='ui.transaction.closedialog'}.size()", equalTo(1))
-    }
-
-    def "User checks close deialog"() {
-        when: "Close dialog setting is requested"
-        def response = when().get(API.Setting, SETTING_NAME)
-
-        then: "Setting object should be returned"
-        response.then().spec(readSpec())
-                .body("data.type", equalTo("setting"))
-                .body("data.id", equalTo(SETTING_NAME))
+    def cleanupSpec() {
+        def defaultSetting = setting.clone()
+        defaultSetting.data.attributes.value = "true"
+        given().body(JsonOutput.toJson(defaultSetting))
+                .when().put(API.Setting, SETTING_NAME)
+                .then().spec(modifySpec())
     }
 
     def "User modifies close dialog"() {
