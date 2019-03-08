@@ -60,7 +60,7 @@ class TotalsReportSpecification extends Specification {
         def response = given()
                 .contentType("application/vnd.mdg+json").
                 when()
-                .get("/report/totals")
+                .get(API.ReportTotals)
 
         def body = JsonPath.parse(response.then()
                 .assertThat().statusCode(200)

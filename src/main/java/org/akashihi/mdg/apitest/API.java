@@ -23,4 +23,6 @@ public final class API {
 
     public static final String BudgetEntries = "/budget/{id}/entry";
     public static final String BudgetEntry = "/budget/{id}/entry/{entryId}";
+
+    public static final String ReportTotals = "/report/totals";
 }
