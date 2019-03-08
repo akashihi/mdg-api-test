@@ -2,6 +2,7 @@ package org.akashihi.mdg.apitest.tests.rate
 
 import com.jayway.jsonpath.JsonPath
 import groovy.json.JsonOutput
+import org.akashihi.mdg.apitest.API
 import spock.lang.Specification
 
 import static io.restassured.RestAssured.given
@@ -32,7 +33,7 @@ class RateSpecification extends Specification {
         def response = given()
                 .contentType("application/vnd.mdg+json").
                 when()
-                .get("/rate/{ts}", "2017-09-20T13:29:00")
+                .get(API.Rates, "2017-09-20T13:29:00")
 
         then: "Rate list should include EURUSD ticker"
         def body = JsonPath.parse(response.then()
@@ -54,7 +55,7 @@ class RateSpecification extends Specification {
         def response = given()
                 .contentType("application/vnd.mdg+json").
                 when()
-                .get("/rate/{ts}/{from}/{to}", "2017-09-20T13:29:00", 978, 840)
+                .get(API.Rate, "2017-09-20T13:29:00", 978, 840)
 
         then: "Rate object should be returned"
         def body = JsonPath.parse(response.then()
@@ -75,7 +76,7 @@ class RateSpecification extends Specification {
         def response = given()
                 .contentType("application/vnd.mdg+json").
                 when()
-                .get("/rate/{ts}/{from}/{to}", "2017-09-20T13:29:00", 356, 348)
+                .get(API.Rate, "2017-09-20T13:29:00", 356, 348)
 
         then: "Rate object should be returned"
         def body = JsonPath.parse(response.then()

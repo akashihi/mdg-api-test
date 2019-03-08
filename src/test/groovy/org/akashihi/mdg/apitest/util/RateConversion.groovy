@@ -25,7 +25,7 @@ class RateConversion {
             def rate = JsonPath.parse(given()
                     .contentType("application/vnd.mdg+json").
                     when()
-                    .get("/rate/{ts}/{from}/{to}", "2017-04-01T13:29:00", currency, primaryCurrency)
+                    .get(API.Rate, "2017-04-01T13:29:00", currency, primaryCurrency)
                     .then()
                     .assertThat().statusCode(200)
                     .assertThat().contentType("application/vnd.mdg+json")

@@ -7,6 +7,9 @@ public final class API {
     public static final String Currencies = "/currency";
     public static final String Currency = "/currency/{id}";
 
+    public static final String Rates = "/rate/{ts}";
+    public static final String Rate = "/rate/{ts}/{from}/{to}";
+
     public static final String Categories = "/category";
     public static final String Category = "/category/{id}";
 
