@@ -1,6 +1,12 @@
 package org.akashihi.mdg.apitest
 
-import static io.restassured.RestAssured.baseURI
+import io.restassured.RestAssured
+import io.restassured.builder.RequestSpecBuilder
+import io.restassured.builder.ResponseSpecBuilder
+import io.restassured.specification.RequestSpecification
+import io.restassured.specification.ResponseSpecification
+
+import static org.hamcrest.Matchers.equalTo
 
 /**
  * Configures mdg api connection properties
@@ -13,6 +19,32 @@ class apiConnectionBase {
     }
 
     def static setupAPI() {
-        baseURI = properties.baseURI
+        RequestSpecification baseRequest = new RequestSpecBuilder()
+                .setBaseUri(properties.baseURI)
+                .build()
+
+        RestAssured.requestSpecification = baseRequest
+    }
+
+    def static readSpec() {
+        return new ResponseSpecBuilder()
+                .expectStatusCode(200)
+                .expectContentType("application/vnd.mdg+json")
+                .build()
+    }
+
+    def static modifySpec() {
+        return new ResponseSpecBuilder()
+                .expectStatusCode(202)
+                .expectContentType("application/vnd.mdg+json")
+                .build()
+    }
+
+    def static errorSpec(Integer errorCode, String errorMsg) {
+        return new ResponseSpecBuilder()
+                .expectStatusCode(errorCode)
+                .expectContentType("application/vnd.mdg+json")
+                .expectBody("errors[0].code", equalTo(errorMsg))
+                .build()
     }
 }

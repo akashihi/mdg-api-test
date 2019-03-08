@@ -6,12 +6,17 @@ import spock.lang.Specification
 import org.akashihi.mdg.apitest.API
 
 import static io.restassured.RestAssured.given
+import static io.restassured.RestAssured.when
+import static org.akashihi.mdg.apitest.apiConnectionBase.modifySpec
+import static org.akashihi.mdg.apitest.apiConnectionBase.readSpec
 import static org.akashihi.mdg.apitest.apiConnectionBase.setupAPI
 import static org.hamcrest.Matchers.*
 import static org.junit.Assert.assertFalse
 import static org.junit.Assert.assertThat
 
 class UiTransactioDialogCloseSpecification extends Specification {
+    String SETTING_NAME = "ui.transaction.closedialog"
+
     def setting = [
             "data": [
                     "type"      : "setting",
@@ -27,62 +32,40 @@ class UiTransactioDialogCloseSpecification extends Specification {
     }
 
     def "User lists settings"() {
-        given: "A running system"
-
         when: "Settings lists is retrieved"
-        def response = given()
-                .contentType("application/vnd.mdg+json").
-                when()
-                .get(API.Settings)
+        def response = when().get(API.Settings)
 
         then: "Settings list should include close dialog"
-        def body = JsonPath.parse(response.then()
-                .assertThat().statusCode(200)
-                .assertThat().contentType("application/vnd.mdg+json")
-                .extract().asString())
-
-        assertThat(body.read("data"), not(empty()))
-        assertFalse(body.read("data[?(@.id == 'ui.transaction.closedialog')].type", List.class).isEmpty())
+        response.then().spec(readSpec())
+                .body("data", not(empty()))
+                .body("data.findAll {it.id=='ui.transaction.closedialog'}.size()", equalTo(1))
     }
 
     def "User checks close deialog"() {
-        given: "A running system"
-
         when: "Close dialog setting is requested"
-        def response = given()
-                .contentType("application/vnd.mdg+json").
-                when()
-                .get(API.Setting, "ui.transaction.closedialog")
+        def response = when().get(API.Setting, SETTING_NAME)
 
         then: "Setting object should be returned"
-        response.then()
-                .assertThat().statusCode(200)
-                .assertThat().contentType("application/vnd.mdg+json")
+        response.then().spec(readSpec())
                 .body("data.type", equalTo("setting"))
+                .body("data.id", equalTo(SETTING_NAME))
     }
 
     def "User modifies close dialog"() {
-        given: "A running system"
+        given: "A default value true"
+        when().get(API.Setting, SETTING_NAME)
+        .then().body("data.attributes.value", equalTo("true"))
 
         when: "New close dialog value is submitted"
-        given()
-                .contentType("application/vnd.mdg+json")
-                .when()
-                .request().body(JsonOutput.toJson(setting))
-                .put(API.Setting, "ui.transaction.closedialog").
-                then()
-                .assertThat().statusCode(202)
-                .assertThat().contentType("application/vnd.mdg+json")
+        given().body(JsonOutput.toJson(setting))
+                .when().put(API.Setting, SETTING_NAME)
+                .then().spec(modifySpec())
                 .body("data.attributes.value", equalTo("false"))
 
         then: "modified data will be retrieved on request"
-        given()
-                .contentType("application/vnd.mdg+json").
-                when()
-                .get(API.Setting, "ui.transaction.closedialog").
-                then()
-                .assertThat().statusCode(200)
-                .assertThat().contentType("application/vnd.mdg+json")
+        when()
+                .get(API.Setting, SETTING_NAME).
+                then().spec(readSpec())
                 .body("data.type", equalTo("setting"))
                 .body("data.attributes.value", equalTo("false"))
 

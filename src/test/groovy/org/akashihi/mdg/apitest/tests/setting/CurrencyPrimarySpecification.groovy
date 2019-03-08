@@ -1,17 +1,20 @@
 package org.akashihi.mdg.apitest.tests.setting
 
-import com.jayway.jsonpath.JsonPath
 import groovy.json.JsonOutput
 import spock.lang.Specification
 import org.akashihi.mdg.apitest.API
 
 import static io.restassured.RestAssured.given
+import static io.restassured.RestAssured.when
+import static org.akashihi.mdg.apitest.apiConnectionBase.errorSpec
+import static org.akashihi.mdg.apitest.apiConnectionBase.modifySpec
+import static org.akashihi.mdg.apitest.apiConnectionBase.readSpec
 import static org.akashihi.mdg.apitest.apiConnectionBase.setupAPI
 import static org.hamcrest.Matchers.*
-import static org.junit.Assert.assertFalse
-import static org.junit.Assert.assertThat
 
 class CurrencyPrimarySpecification extends Specification {
+    String SETTING_NAME = "currency.primary"
+
     def setting = [
             "data": [
                     "type"      : "setting",
@@ -23,69 +26,42 @@ class CurrencyPrimarySpecification extends Specification {
     ]
 
     def setupSpec() {
-        setupAPI();
+        setupAPI()
     }
 
     def "User lists settings"() {
-        given: "A running system"
-
         when: "Settings lists is retrieved"
-        def response = given()
-                .contentType("application/vnd.mdg+json").
-                when()
-                .get(API.Settings)
+        def response = when().get(API.Settings)
 
         then: "Settings list should include primary currency"
-        def body = JsonPath.parse(response.then()
-                .assertThat().statusCode(200)
-                .assertThat().contentType("application/vnd.mdg+json")
-                .extract().asString())
-
-        assertThat(body.read("data"), not(empty()))
-        assertFalse(body.read("data[?(@.id == 'currency.primary')].type", List.class).isEmpty())
+        response.then().spec(readSpec())
+                .body("data", not(empty()))
+                .body("data.findAll {it.id=='currency.primary'}.size()", equalTo(1))
     }
 
     def "User checks primary currency"() {
-        given: "A running system"
-
         when: "Primary currency setting is requested"
-        def response = given()
-                .contentType("application/vnd.mdg+json").
-                when()
-                .get(API.Setting, "currency.primary")
+        def response = when().get(API.Setting, SETTING_NAME)
 
         then: "Setting object should be returned"
-        response.then()
-                .assertThat().statusCode(200)
-                .assertThat().contentType("application/vnd.mdg+json")
+        response.then().spec(readSpec())
                 .body("data.type", equalTo("setting"))
+                .body("data.id", equalTo(SETTING_NAME))
     }
 
     def "User modifies primary currency"() {
-        given: "A running system"
-
         when: "New primary currency value is submitted"
-        given()
-                .contentType("application/vnd.mdg+json")
-                .when()
-                .request().body(JsonOutput.toJson(setting))
-                .put(API.Setting, "currency.primary").
-                then()
-                .assertThat().statusCode(202)
-                .assertThat().contentType("application/vnd.mdg+json")
+        given().body(JsonOutput.toJson(setting))
+                .when().put(API.Setting, SETTING_NAME).
+                then().spec(modifySpec())
                 .body("data.attributes.value", equalTo("840"))
 
         then: "modified data will be retrieved on request"
-        given()
-                .contentType("application/vnd.mdg+json").
-                when()
-                .get(API.Setting, "currency.primary").
+                when().get(API.Setting, SETTING_NAME).
                 then()
-                .assertThat().statusCode(200)
-                .assertThat().contentType("application/vnd.mdg+json")
                 .body("data.type", equalTo("setting"))
+                .body("data.id", equalTo(SETTING_NAME))
                 .body("data.attributes.value", equalTo("840"))
-
     }
 
     def "Invalid primary currency value is rejected"() {
@@ -94,16 +70,11 @@ class CurrencyPrimarySpecification extends Specification {
         when: "Incorrect primary currency value is submitted"
         def invalidSetting = setting.clone()
         invalidSetting.data.attributes.value="-1"
-        def response = given()
-                .contentType("application/vnd.mdg+json")
-                .when()
-                .request().body(JsonOutput.toJson(setting))
-                .put(API.Setting, "currency.primary")
 
         then: "Update should be rejected."
-        response.then()
-                .assertThat().statusCode(422)
-                .assertThat().contentType("application/vnd.mdg+json")
+        given().body(JsonOutput.toJson(setting))
+                .when().put(API.Setting, SETTING_NAME)
+                .then().spec(errorSpec(422, "SETTING_DATA_INVALID"))
 
     }
 }
