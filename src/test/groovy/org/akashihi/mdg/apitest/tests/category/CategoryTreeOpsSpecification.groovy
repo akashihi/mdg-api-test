@@ -1,85 +1,26 @@
 package org.akashihi.mdg.apitest.tests.category
 
 import groovy.json.JsonOutput
-import groovy.json.JsonSlurper
+import org.akashihi.mdg.apitest.fixtures.CategoryFixture
 import spock.lang.Specification
 import org.akashihi.mdg.apitest.API
 
 import static io.restassured.RestAssured.given
+import static io.restassured.RestAssured.when
+import static org.akashihi.mdg.apitest.apiConnectionBase.errorSpec
+import static org.akashihi.mdg.apitest.apiConnectionBase.readSpec
 import static org.akashihi.mdg.apitest.apiConnectionBase.setupAPI
 import static org.hamcrest.Matchers.*
-import static org.junit.Assert.assertNull
-import static org.junit.Assert.assertThat
 
 class CategoryTreeOpsSpecification extends Specification {
-    def outer = [
-            "data": [
-                    "type"      : "category",
-                    "attributes": [
-                            "name": "Bonuses",
-                            "priority" : 1,
-                            "account_type" : "expense"
-                    ]
-            ]
-    ]
-
-    def middle = [
-            "data": [
-                    "type"      : "category",
-                    "attributes": [
-                            "parent_id": -1,
-                            "name": "Bonuses",
-                            "priority" : 1,
-                            "account_type" : "expense"
-                    ]
-            ]
-    ]
-
-    def inner = [
-            "data": [
-                    "type"      : "category",
-                    "attributes": [
-                            "parent_id": -1,
-                            "name": "Bonuses",
-                            "priority" : 1,
-                            "account_type" : "expense"
-                    ]
-            ]
-    ]
-
     def setupSpec() {
         setupAPI()
     }
 
     def makeTree() {
-        def outerId = given()
-                .contentType("application/vnd.mdg+json").
-                when()
-                .request().body(JsonOutput.toJson(outer))
-                .post(API.Categories).
-                then()
-                .assertThat().statusCode(201)
-                .extract().path("data.id")
-        def middleCategory = middle.clone()
-        middleCategory.data.attributes.parent_id = outerId
-        def middleId = given()
-                .contentType("application/vnd.mdg+json").
-                when()
-                .request().body(JsonOutput.toJson(middleCategory))
-                .post(API.Categories).
-                then()
-                .assertThat().statusCode(201)
-                .extract().path("data.id")
-        def innerCategory = inner.clone()
-        innerCategory.data.attributes.parent_id = middleId
-        def innerId = given()
-                .contentType("application/vnd.mdg+json").
-                when()
-                .request().body(JsonOutput.toJson(innerCategory))
-                .post(API.Categories).
-                then()
-                .assertThat().statusCode(201)
-                .extract().path("data.id")
+        def outerId = CategoryFixture.create()
+        def middleId = CategoryFixture.create(CategoryFixture.category(outerId))
+        def innerId = CategoryFixture.create(CategoryFixture.category(outerId))
         return [
                 "outer": outerId,
                 "middle": middleId,
@@ -89,53 +30,20 @@ class CategoryTreeOpsSpecification extends Specification {
 
     def 'Check that category with parent correctly parented'() {
         given: 'Top level category'
-        def outerId = given()
-                .contentType("application/vnd.mdg+json").
-                when()
-                .log().all()
-                .request().body(JsonOutput.toJson(outer))
-                .post(API.Categories).
-                then()
-                .log().all()
-                .assertThat().statusCode(201)
-                .extract().path("data.id")
+        def outerId = CategoryFixture.create()
 
         when: 'Children are added to that category'
-        def middleCategory = middle.clone()
-        middleCategory.data.attributes.parent_id = outerId
-        def middleId = given()
-                .contentType("application/vnd.mdg+json").
-                when()
-                .request().body(JsonOutput.toJson(middleCategory))
-                .post(API.Categories).
-                then()
-                .assertThat().statusCode(201)
-                .extract().path("data.id")
-        def innerCategory = inner.clone()
-        innerCategory.data.attributes.parent_id = middleId
-        def innerId = given()
-                .contentType("application/vnd.mdg+json").
-                when()
-                .request().body(JsonOutput.toJson(innerCategory))
-                .post(API.Categories).
-                then()
-                .assertThat().statusCode(201)
-                .extract().path("data.id")
+        def middleCategory = CategoryFixture.category(outerId)
+        def middleId = CategoryFixture.create(middleCategory)
+        def innerCategory = CategoryFixture.category(middleId)
+        def innerId = CategoryFixture.create(innerCategory)
 
         then: 'All kids are returned with the top level category'
-        def json = given()
-                .contentType("application/vnd.mdg+json").
-                when()
-                .get(API.Category, outerId)
-                .then()
-                .assertThat().statusCode(200)
-                .assertThat().contentType("application/vnd.mdg+json")
-                .extract().asString()
-
-        def tree = new JsonSlurper().parseText(json)
-        assertThat(tree.data.id, is(outerId))
-        assertThat(tree.data.attributes.children[0].id, is(middleId))
-        assertThat(tree.data.attributes.children[0].children[0].id, is(innerId))
+        when().get(API.Category, outerId)
+                .then().spec(readSpec())
+                .body("data.id", is(outerId))
+                .body("data.attributes.children[0].id", is(middleId))
+                .body("data.attributes.children[0].children[0].id", is(innerId))
     }
 
     def 'Category parent can be changed'() {
@@ -143,32 +51,15 @@ class CategoryTreeOpsSpecification extends Specification {
         def ids = makeTree()
 
         when: 'Inner category is reparented to the middle'
-        def innerCategory = inner.clone()
-        innerCategory.data.attributes.parent_id = ids['outer']
-        given()
-                .contentType("application/vnd.mdg+json")
-                .when()
-                .request().body(JsonOutput.toJson(innerCategory))
-                .put(API.Category, ids['inner']).
-                then()
-                .assertThat().statusCode(202)
-                .assertThat().contentType("application/vnd.mdg+json")
+        def innerCategory = CategoryFixture.category(ids['outer'])
+        CategoryFixture.update(ids['inner'], innerCategory)
 
         then: 'Outer category have two kids'
-        def json = given()
-                .contentType("application/vnd.mdg+json").
-                when()
-                .get(API.Category, ids['outer']).
-                then()
-                .assertThat().statusCode(200)
-                .assertThat().contentType("application/vnd.mdg+json")
-                .extract().asString()
-        def tree = new JsonSlurper().parseText(json)
-        def kids = tree.data.attributes.children
-
-        assertThat(kids.size(), is(2))
-        assertNull(kids[0].children)
-        assertNull(kids[1].children)
+        when().get(API.Category, ids['outer'])
+                .then().spec(readSpec())
+                .body("data.attributes.children.size()", is(2))
+                .body("data.attributes.children[0].children", is(nullValue()))
+                .body("data.attributes.children[1].children", is(nullValue()))
     }
 
     def 'Cyclic reparenting is prevented'() {
@@ -176,89 +67,56 @@ class CategoryTreeOpsSpecification extends Specification {
         def ids = makeTree()
 
         when: 'Outer category is reparented to the inner one'
-        def outerCategory = outer.clone()
-        outerCategory.data.attributes.parent_id = ids['inner']
-        def response = given()
-                .contentType("application/vnd.mdg+json")
-                .when()
-                .request().body(JsonOutput.toJson(outerCategory))
-                .put(API.Category, ids['outer'])
+        def outerCategory = CategoryFixture.category(ids['inner'])
         then: 'Cycle is prevented and error is returned'
-        response.then()
-                .assertThat().statusCode(412)
-                .body("errors[0].code", equalTo("CATEGORY_TREE_CYCLED"))
+        given().body(JsonOutput.toJson(outerCategory))
+            .when().put(API.Category, ids['outer'])
+            .then().spec(errorSpec(412, "CATEGORY_TREE_CYCLED"))
     }
 
     def 'Setting parent to self moves tree to the top'() {
         given: 'Tree of 3 categories'
         def ids = makeTree()
 
-        when: 'Outer category is reparented to the inner one'
-        def middleCategory = middle.clone()
-        middleCategory.data.attributes.parent_id = ids['middle']
-        given()
-                .contentType("application/vnd.mdg+json")
-                .when()
-                .request().body(JsonOutput.toJson(middleCategory))
-                .put(API.Category, ids['middle']).
-                then()
-                .assertThat().statusCode(202)
-                .assertThat().contentType("application/vnd.mdg+json")
+        when: 'Middle category is reparented to self'
+        def middleCategory = CategoryFixture.category(ids['middle'])
+        CategoryFixture.update(ids['middle'], middleCategory)
 
         then: 'Middle becames top level parent'
-        def json = given()
-                .contentType("application/vnd.mdg+json").
-                when()
-                .get(API.Category, ids['middle']).
-                then()
-                .assertThat().statusCode(200)
-                .assertThat().contentType("application/vnd.mdg+json")
-                .extract().asString()
-        def tree = new JsonSlurper().parseText(json)
-
-        assertThat(tree.data.id, is(ids['middle']))
-        assertThat(tree.data.attributes.children[0].id, is(ids['inner']))
-        assertNull(tree.data.attributes.children[0].children)
+        when().get(API.Category, ids['outer']).
+                then().spec(readSpec())
+                .body("data.id", is(ids['outer']))
+                .body("data.attributes.children[0].id", is(ids['inner']))
+                .body("data.attributes.children[0].children", is(nullValue()))
     }
 
     def 'Category of one type can not be parented to category of different type'() {
         given: 'Tree of 3 categories'
         def ids = makeTree()
-        def otherCategory = middle.clone()
-        otherCategory.data.attributes.account_type = 'income'
 
         when: "Another type category is parented to that tree"
-        def response = given()
-                .contentType("application/vnd.mdg+json").
-                when()
-                .request().body(JsonOutput.toJson(otherCategory))
-                .post(API.Categories)
+        def otherCategory = CategoryFixture.category(ids['outer'])
+        otherCategory.data.attributes.account_type = 'income'
 
-        then: 'Reparenting is declined'
-        response.then()
-                .assertThat().statusCode(412)
-                .assertThat().contentType("application/vnd.mdg+json")
-                .body("errors[0].code", equalTo("CATEGORY_INVALID_TYPE"))
+        then: 'Creation is declined'
+        given().body(JsonOutput.toJson(otherCategory))
+                .when().post(API.Categories)
+                .then()spec(errorSpec(412, "CATEGORY_INVALID_TYPE"))
     }
 
     def 'Category of one type can not be reparented to category of different type'() {
         given: 'Tree of 3 categories and another one category'
         def ids = makeTree()
+        def otherCategory = CategoryFixture.category()
+        otherCategory.data.attributes.account_type = 'income'
+        def otherCategoryId = CategoryFixture.create(otherCategory)
 
         when: "New category of different type is created under that tree"
+        def middleCategory = CategoryFixture.category(otherCategoryId)
 
-        def otherCategory = middle.clone()
-        otherCategory.data.attributes.account_type = 'income'
-        otherCategory.data.attributes.parent_id = ids["outer"]
-        def response = given()
-                .contentType("application/vnd.mdg+json")
-                .when()
-                .request().body(JsonOutput.toJson(otherCategory))
-                .post(API.Categories)
-        then: "Creation should be declined"
-                response.then()
-                .assertThat().statusCode(412)
-                .assertThat().contentType("application/vnd.mdg+json")
-                .body("errors[0].code", equalTo("CATEGORY_INVALID_TYPE"))
+        then: "Reparenting is prevented"
+        given().body(JsonOutput.toJson(middleCategory))
+                .when().put(API.Category, ids["middle"])
+                .then().spec(errorSpec(412, "CATEGORY_INVALID_TYPE"))
     }
 }

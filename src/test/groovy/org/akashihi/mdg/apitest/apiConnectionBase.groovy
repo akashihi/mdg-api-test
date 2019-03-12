@@ -4,8 +4,8 @@ import io.restassured.RestAssured
 import io.restassured.builder.RequestSpecBuilder
 import io.restassured.builder.ResponseSpecBuilder
 import io.restassured.specification.RequestSpecification
-import io.restassured.specification.ResponseSpecification
 
+import static org.hamcrest.Matchers.containsString
 import static org.hamcrest.Matchers.equalTo
 
 /**
@@ -30,6 +30,14 @@ class apiConnectionBase {
         return new ResponseSpecBuilder()
                 .expectStatusCode(200)
                 .expectContentType("application/vnd.mdg+json")
+                .build()
+    }
+
+    def static createSpec(String location) {
+        return new ResponseSpecBuilder()
+                .expectStatusCode(201)
+                .expectContentType("application/vnd.mdg+json")
+                .expectHeader("Location", containsString(location))
                 .build()
     }
 
