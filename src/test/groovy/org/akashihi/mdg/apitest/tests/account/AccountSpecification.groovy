@@ -1,47 +1,29 @@
 package org.akashihi.mdg.apitest.tests.account
 
-import com.jayway.jsonpath.JsonPath
+
 import groovy.json.JsonOutput
+import org.akashihi.mdg.apitest.fixtures.AccountFixture
 import spock.lang.Specification
 import org.akashihi.mdg.apitest.API
 
 import static io.restassured.RestAssured.given
+import static io.restassured.RestAssured.when
+import static org.akashihi.mdg.apitest.apiConnectionBase.createSpec
+import static org.akashihi.mdg.apitest.apiConnectionBase.modifySpec
+import static org.akashihi.mdg.apitest.apiConnectionBase.readSpec
 import static org.akashihi.mdg.apitest.apiConnectionBase.setupAPI
-import static org.hamcrest.Matchers.containsString
-import static org.hamcrest.Matchers.empty
 import static org.hamcrest.Matchers.equalTo
-import static org.hamcrest.Matchers.not
-import static org.junit.Assert.assertThat
 
 class AccountSpecification extends Specification {
-    def account = [
-            "data": [
-                    "type"      : "account",
-                    "attributes": [
-                            "account_type": "expense",
-                            "currency_id" : 978,
-                            "name"        : "Rent"
-                    ]
-            ]
-    ]
-
     def setupSpec() {
-        setupAPI();
+        setupAPI()
     }
 
     def "User creates new account"() {
-        given: "A brand new account"
-
         when: "Account is submitted to the system"
-        def accountId = given()
-                .contentType("application/vnd.mdg+json").
-                when()
-                .request().body(JsonOutput.toJson(account))
-                .post(API.Accounts).
-                then()
-                .assertThat().statusCode(201)
-                .assertThat().contentType("application/vnd.mdg+json")
-                .assertThat().header("Location", containsString("/api/account/"))
+        def accountId = given().body(JsonOutput.toJson(AccountFixture.expenseAccount()))
+                .when().post(API.Accounts)
+                .then().spec(createSpec("/api/account"))
                 .body("data.type", equalTo("account"))
                 .body("data.attributes.account_type", equalTo("expense"))
                 .body("data.attributes.currency_id", equalTo(978))
@@ -49,43 +31,23 @@ class AccountSpecification extends Specification {
                 .extract().path("data.id")
 
         then: "Account appears on the accounts list"
-        def response = given()
-                .contentType("application/vnd.mdg+json").
-                when()
-                .get(API.Accounts)
-        def body = JsonPath.parse(response.then()
-                .assertThat().statusCode(200)
-                .assertThat().contentType("application/vnd.mdg+json")
-                .extract().asString())
-
-        assertThat(body.read("data"), not(empty()))
-        assertThat(body.read("data[?(@.id == ${accountId})].type", List.class).first(), equalTo("account"))
-        assertThat(body.read("data[?(@.id == ${accountId})].attributes.account_type", List.class).first(), equalTo("expense"))
-        assertThat(body.read("data[?(@.id == ${accountId})].attributes.currency_id", List.class).first(), equalTo(978))
-        assertThat(body.read("data[?(@.id == ${accountId})].attributes.name", List.class).first(), equalTo("Rent"))
+        when().get(API.Accounts)
+                .then().spec(readSpec())
+                .body("data.find {it.id==${accountId}}.type", equalTo("account"))
+                .body("data.find {it.id==${accountId}}.attributes.account_type", equalTo("expense"))
+                .body("data.find {it.id==${accountId}}.attributes.currency_id", equalTo(978))
+                .body("data.find {it.id==${accountId}}.attributes.name", equalTo("Rent"))
     }
 
     def "User checks account data"() {
-        given: "A brand new account"
-        def accountId = given()
-                .contentType("application/vnd.mdg+json").
-                when()
-                .request().body(JsonOutput.toJson(account))
-                .post(API.Accounts).
-                then()
-                .assertThat().statusCode(201)
-                .extract().path("data.id")
+        given: "A brand new expenseAccount"
+        def accountId = AccountFixture.create(AccountFixture.expenseAccount())
 
-        when: "Specific account is requested"
-        def response = given()
-                .contentType("application/vnd.mdg+json").
-                when()
-                .get(API.Account, accountId)
+        when: "Specific expenseAccount is requested"
+        def response =when().get(API.Account, accountId)
 
         then: "Account object should be returned"
-        response.then()
-                .assertThat().statusCode(200)
-                .assertThat().contentType("application/vnd.mdg+json")
+        response.then().spec(readSpec())
                 .body("data.type", equalTo("account"))
                 .body("data.attributes.account_type", equalTo("expense"))
                 .body("data.attributes.currency_id", equalTo(978))
@@ -93,41 +55,20 @@ class AccountSpecification extends Specification {
     }
 
     def "User modifies account data"() {
-        given: "A brand new account"
-        def accountId = given()
-                .contentType("application/vnd.mdg+json").
-                when()
-                .request().body(JsonOutput.toJson(account))
-                .post(API.Accounts).
-                then()
-                .assertThat().statusCode(201)
-                .extract().path("data.id")
+        given: "A brand new expenseAccount"
+        def accountId = AccountFixture.create(AccountFixture.expenseAccount())
 
-        when: "New account data is submitted"
-        def modifiedAccount = account.clone()
+        when: "New expenseAccount data is submitted"
+        def modifiedAccount = AccountFixture.expenseAccount()
         modifiedAccount.data.attributes.name = "Monthly rent"
-        given()
-                .contentType("application/vnd.mdg+json")
-                .when()
-                .request().body(JsonOutput.toJson(modifiedAccount))
-                .put(API.Account, accountId).
-                then()
-                .assertThat().statusCode(202)
-                .assertThat().contentType("application/vnd.mdg+json")
+        given().body(JsonOutput.toJson(modifiedAccount))
+                .when().put(API.Account, accountId)
+                .then().spec(modifySpec())
                 .body("data.attributes.name", equalTo("Monthly rent"))
 
         then: "modified data will be retrieved on request"
-        given()
-                .contentType("application/vnd.mdg+json").
-                when()
-                .get(API.Account, accountId).
-                then()
-                .assertThat().statusCode(200)
-                .assertThat().contentType("application/vnd.mdg+json")
-                .body("data.type", equalTo("account"))
-                .body("data.attributes.account_type", equalTo("expense"))
-                .body("data.attributes.currency_id", equalTo(978))
+                when().get(API.Account, accountId).
+                then().spec(readSpec())
                 .body("data.attributes.name", equalTo("Monthly rent"))
-
     }
 }

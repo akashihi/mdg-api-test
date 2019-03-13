@@ -25,7 +25,7 @@ class CategoryAccountSpecification extends Specification {
         def categoryId = CategoryFixture.create()
 
         when: 'Account is created with that category'
-        def accountId = AccountFixture.create(AccountFixture.account(categoryId))
+        def accountId = AccountFixture.create(AccountFixture.expenseAccount(categoryId))
 
         then: "Account should be linked to the category"
         when().get(API.Account, accountId)
@@ -39,7 +39,7 @@ class CategoryAccountSpecification extends Specification {
         def accountId = AccountFixture.create()
 
         when: 'Account is assigned to that category'
-        def modifiedAccount = AccountFixture.account()
+        def modifiedAccount = AccountFixture.expenseAccount()
         modifiedAccount.data.attributes.category_id = categoryId
         given().body(JsonOutput.toJson(modifiedAccount))
                 .when().put(API.Account, accountId).
@@ -55,7 +55,7 @@ class CategoryAccountSpecification extends Specification {
     def 'Category is dropped while begin assigned to account'() {
         given: 'New category and account'
         def categoryId = CategoryFixture.create()
-        def accountId = AccountFixture.create(AccountFixture.account(categoryId))
+        def accountId = AccountFixture.create(AccountFixture.expenseAccount(categoryId))
 
         when: "Category is deleted"
         when().delete(API.Category, categoryId)
@@ -70,7 +70,7 @@ class CategoryAccountSpecification extends Specification {
     def 'Category is assigned to the incompatible account'() {
         when: 'Account with incompatible category is created'
         def categoryId = CategoryFixture.create()
-        def account = AccountFixture.account(categoryId)
+        def account = AccountFixture.expenseAccount(categoryId)
         account.data.attributes.account_type="income"
 
         then: 'Creation should fail'
