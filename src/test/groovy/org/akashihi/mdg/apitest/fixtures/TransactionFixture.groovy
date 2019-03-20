@@ -6,6 +6,7 @@ import org.akashihi.mdg.apitest.API
 import java.time.LocalDateTime
 
 import static io.restassured.RestAssured.given
+import static org.akashihi.mdg.apitest.apiConnectionBase.createSpec
 
 class TransactionFixture {
     def accountExpense = [
@@ -165,5 +166,13 @@ class TransactionFixture {
 
     public def makeTransactions() {
         return [makeRentTransaction(), makeIncomeTransaction(), makeSpendTransaction()]
+    }
+
+    static def create(transaction) {
+        return given().body(JsonOutput.toJson(transaction))
+                .when()
+                .post(API.Transactions)
+                .then().spec(createSpec("/api/transaction"))
+                .extract().path("data.id")
     }
 }

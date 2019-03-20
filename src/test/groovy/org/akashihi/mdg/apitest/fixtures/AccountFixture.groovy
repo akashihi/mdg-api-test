@@ -10,7 +10,7 @@ class AccountFixture {
     static def expenseAccount(Long category_id = null) {
         return [
                 "data": [
-                        "type"      : "expenseAccount",
+                        "type"      : "account",
                         "attributes": [
                                 "account_type": "expense",
                                 "currency_id" : 978,
@@ -24,7 +24,7 @@ class AccountFixture {
     static def assetAccount(Long category_id = null) {
         return [
                 "data": [
-                        "type"      : "expenseAccount",
+                        "type"      : "account",
                         "attributes": [
                                 "account_type": "asset",
                                 "currency_id" : 978,
@@ -41,7 +41,7 @@ class AccountFixture {
     static def incomeAccount(Long category_id = null) {
         return [
                 "data": [
-                        "type"      : "expenseAccount",
+                        "type"      : "account",
                         "attributes": [
                                 "account_type": "income",
                                 "currency_id" : 978,
