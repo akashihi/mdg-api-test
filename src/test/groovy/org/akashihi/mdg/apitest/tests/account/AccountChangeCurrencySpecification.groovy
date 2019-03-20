@@ -8,6 +8,7 @@ import spock.lang.Specification
 
 import static io.restassured.RestAssured.given
 import static io.restassured.RestAssured.when
+import static org.akashihi.mdg.apitest.apiConnectionBase.errorSpec
 import static org.akashihi.mdg.apitest.apiConnectionBase.modifySpec
 import static org.akashihi.mdg.apitest.apiConnectionBase.readSpec
 import static org.akashihi.mdg.apitest.apiConnectionBase.setupAPI
@@ -55,6 +56,20 @@ class AccountChangeCurrencySpecification extends Specification {
 
     def setupSpec() {
         setupAPI()
+    }
+
+    def "No currency change for assets"() {
+        given: "Asset account"
+        def assetAccount = AccountFixture.assetAccount()
+        def assetId = AccountFixture.create(assetAccount)
+
+        when: "Currency of asset account is changes"
+        assetAccount.data.attributes.currency_id = 203
+        def response = given().body(JsonOutput.toJson(assetAccount))
+                .when().put(API.Account, assetId)
+
+        then: "Error must be returned"
+        response.then().spec(errorSpec(422, "ACCOUNT_CURRENCY_ASSET"))
     }
 
     def "Transaction with same currency rebalanced precisely"() {
