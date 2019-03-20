@@ -1,101 +1,50 @@
 package org.akashihi.mdg.apitest.tests.transaction
 
-import com.jayway.jsonpath.JsonPath
 import groovy.json.JsonOutput
 import org.akashihi.mdg.apitest.fixtures.TransactionFixture
 import org.akashihi.mdg.apitest.API
 import spock.lang.*
 
 import static io.restassured.RestAssured.*
+import static org.akashihi.mdg.apitest.apiConnectionBase.createSpec
+import static org.akashihi.mdg.apitest.apiConnectionBase.modifySpec
+import static org.akashihi.mdg.apitest.apiConnectionBase.readSpec
 import static org.akashihi.mdg.apitest.apiConnectionBase.setupAPI
 import static org.hamcrest.Matchers.*
-import static org.junit.Assert.assertThat
 
 class TransactionSpecification extends Specification {
-
-    TransactionFixture f = new TransactionFixture()
-
     def setupSpec() {
         setupAPI()
     }
 
     def "User creates new transaction"() {
-        given: "Several accounts"
-        def accounts = f.prepareAccounts()
-
-        when: "New transaction on those accounts is submitted"
-        def transaction = [
-                "data": [
-                        "type"      : "transaction",
-                        "attributes": [
-                                "timestamp" : '2017-02-05T16:45:36',
-                                "comment"   : "Test transaction",
-                                "tags"      : ["test", "transaction"],
-                                "operations": [
-                                        [
-                                                "account_id": accounts["income"],
-                                                "amount"    : -150
-                                        ],
-                                        [
-                                                "account_id": accounts["asset"],
-                                                "amount"    : 50
-                                        ],
-                                        [
-                                                "account_id": accounts["expense"],
-                                                "amount"    : 100
-                                        ]
-                                ]
-                        ]
-                ]
-        ]
-        def response =given()
-                .contentType("application/vnd.mdg+json").
-                when()
-                .request().body(JsonOutput.toJson(transaction))
-                .post(API.Transactions)
-        def body = JsonPath.parse(response.
-                then()
-                .assertThat().statusCode(201)
-                .assertThat().contentType("application/vnd.mdg+json")
-                .assertThat().header("Location", containsString("/api/transaction/"))
-                .extract().asString())
-
-        assertThat(body.read("data.type"), equalTo("transaction"))
-        assertThat(body.read("data.attributes.comment"), equalTo("Test transaction"))
-        assertThat(body.read("data.attributes.tags"), containsInAnyOrder("test", "transaction"))
-        assertThat(body.read("data.attributes.operations.*.amount"), containsInAnyOrder(-150, 50, 100))
-        def txId =response.then().extract().path("data.id")
+        when: "New transaction is submitted"
+        def transaction = TransactionFixture.rentTransaction()
+        def txId = given().body(JsonOutput.toJson(transaction))
+                .when().post(API.Transactions)
+                .then().spec(createSpec("/api/transaction/"))
+                .body("data.type", equalTo("transaction"))
+                .body("data.attributes.comment", equalTo("Test transaction"))
+                .body("data.attributes.tags", containsInAnyOrder("test", "transaction"))
+                .body("data.attributes.operations.findAll().amount", containsInAnyOrder(-150, 50, 100))
+                .extract().path("data.id")
 
         then: "Transaction appears on transaction list"
-        def listResponse = given()
-                .contentType("application/vnd.mdg+json").
-                when()
-                .get(API.Transactions)
-        def listBody =  JsonPath.parse(listResponse.then()
-                .assertThat().statusCode(200)
-                .assertThat().contentType("application/vnd.mdg+json")
-                .extract().asString())
-        assertThat(listBody.read("data", List.class).size(), is(not(0)))
-        assertThat(listBody.read("data[?(@.id == ${txId})].type", List.class).first(), equalTo("transaction"))
-        assertThat(listBody.read("data[?(@.id == ${txId})].attributes.comment", List.class).first(), equalTo("Test transaction"))
-        assertThat(listBody.read("data[?(@.id == ${txId})].attributes.tags", List.class).first(), containsInAnyOrder("test", "transaction"))
-        assertThat(listBody.read("data[?(@.id == ${txId})].attributes.operations.*.amount"), containsInAnyOrder(-150, 50, 100))
+        given().when().get(API.Transactions)
+                .then().spec(readSpec())
+                .body("data.find {it.id==${txId}}.type", equalTo("transaction"))
+                .body("data.find {it.id==${txId}}.attributes.comment", equalTo("Test transaction"))
+                .body("data.find {it.id==${txId}}.attributes.tags", containsInAnyOrder("test", "transaction"))
+                .body("data.find {it.id==${txId}}.attributes.operations.findAll().amount", containsInAnyOrder(-150, 50, 100))
     }
 
     def "User checks transaction data"() {
-        given: "New transaction is submitted"
-        def txId = f.makeRentTransaction()
-
-        when: "Specific transaction is requested"
-        def response = given()
-                .contentType("application/vnd.mdg+json").
-                when()
-                .get(API.Transaction, txId)
+        when: "New transaction is submitted"
+        def txId = TransactionFixture.create(TransactionFixture.rentTransaction())
 
         then: "Transaction object should be returned"
-        response.then()
-                .assertThat().statusCode(200)
-                .assertThat().contentType("application/vnd.mdg+json")
+        given().when().get(API.Transaction, txId)
+            .then().spec(readSpec())
                 .body("data.type", equalTo("transaction"))
                 .body("data.attributes.comment", equalTo("Test transaction"))
                 .body("data.attributes.tags", containsInAnyOrder("test", "transaction"))
@@ -106,84 +55,40 @@ class TransactionSpecification extends Specification {
 
     def "User modifies transaction data"() {
         given: "New transaction is submitted"
-        def accounts = f.prepareAccounts()
-        def transaction = [
-                "data": [
-                        "type"      : "transaction",
-                        "attributes": [
-                                "timestamp" : '2017-02-05T16:45:36',
-                                "comment"   : "Test transaction",
-                                "tags"      : ["test", "transaction"],
-                                "operations": [
-                                        [
-                                                "account_id": accounts["income"],
-                                                "amount"    : -150
-                                        ],
-                                        [
-                                                "account_id": accounts["asset"],
-                                                "amount"    : 50
-                                        ],
-                                        [
-                                                "account_id": accounts["expense"],
-                                                "amount"    : 100
-                                        ]
-                                ]
-                        ]
-                ]
-        ]
-        def txId = given()
-                .contentType("application/vnd.mdg+json").
-                when()
-                .request().body(JsonOutput.toJson(transaction))
-                .post(API.Transactions).
-                then()
-                .assertThat().statusCode(201)
-                .assertThat().contentType("application/vnd.mdg+json")
-                .extract().path("data.id")
+        def txId = TransactionFixture.create()
 
         when: "Transaction is modified"
-        transaction.data.attributes.comment = "Modified"
-        transaction.data.attributes.operations[1].amount = 100
-        transaction.data.attributes.operations[2].amount = 50
-        given()
-                .contentType("application/vnd.mdg+json").
-                when()
-                .request().body(JsonOutput.toJson(transaction))
-                .put(API.Transaction, txId)
+        def modified = TransactionFixture.rentTransaction()
+        modified.data.attributes.comment = "Modified"
+        modified.data.attributes.operations[1].amount = 80
+        modified.data.attributes.operations[2].amount = 70
+        given().body(JsonOutput.toJson(modified))
+                .when().put(API.Transaction, txId)
+                .then().spec(modifySpec())
+                .body("data.attributes.comment", equalTo("Modified"))
+                .body("data.attributes.operations[1].amount", is(80))
+                .body("data.attributes.operations[2].amount", is(70))
 
         then: "Transaction object should contain new data"
-        given()
-                .contentType("application/vnd.mdg+json").
-                when()
-                .get(API.Transaction, txId).
-                then()
-                .assertThat().statusCode(200)
-                .assertThat().contentType("application/vnd.mdg+json")
-                .body("data.type", equalTo("transaction"))
+        given().when().get(API.Transaction, txId)
+                .then().spec(readSpec())
                 .body("data.attributes.comment", equalTo("Modified"))
-                .body("data.attributes.operations[1].amount", is(100))
-                .body("data.attributes.operations[2].amount", is(50))
+                .body("data.attributes.operations[1].amount", is(80))
+                .body("data.attributes.operations[2].amount", is(70))
     }
 
     def "User deletes a transaction"() {
         given: "New transaction is submitted"
-        def txId = f.makeRentTransaction()
+        def txId = TransactionFixture.create()
 
         when: "Transaction is deleted"
         when().delete(API.Transaction, txId)
-        .then().assertThat().statusCode(204)
+            .then().statusCode(204)
 
         then: "Transaction should not appear in transaction list"
-        def response = given()
-                .contentType("application/vnd.mdg+json").
-                when()
-                .get(API.Transactions)
-        def body = JsonPath.parse(response.then()
-                .assertThat().statusCode(200)
-                .assertThat().contentType("application/vnd.mdg+json")
-                .extract().asString())
-
-        assertThat(body.read("data[?(@.id == ${txId})]", List.class), empty())
+        given().when().get(API.Transactions)
+            .then().spec(readSpec())
+            .body("data.find {it.id==${txId}}", nullValue())
     }
 }
 

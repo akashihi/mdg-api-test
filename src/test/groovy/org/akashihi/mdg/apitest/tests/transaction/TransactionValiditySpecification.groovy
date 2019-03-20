@@ -6,116 +6,49 @@ import spock.lang.Specification
 import org.akashihi.mdg.apitest.API
 
 import static io.restassured.RestAssured.given
+import static org.akashihi.mdg.apitest.apiConnectionBase.errorSpec
 import static org.akashihi.mdg.apitest.apiConnectionBase.setupAPI
-import static org.hamcrest.Matchers.equalTo
 
 class TransactionValiditySpecification extends Specification {
-
-    TransactionFixture f = new TransactionFixture();
-
     def setupSpec() {
-        setupAPI();
+        setupAPI()
     }
 
     def "Empty transactions are not allowed"() {
-        given: "Several accounts"
-        f.prepareAccounts()
-
         when: "Transaction without operations is submitted"
-        def transaction = [
-                "data": [
-                        "type"      : "transaction",
-                        "attributes": [
-                                "timestamp" : "2017-02-05T13:54:35",
-                                "comment"   : "Test transaction",
-                                "tags"      : ["test", "transaction"],
-                                "operations": new ArrayList()
-                        ]
-                ]
-        ]
-        def response = given()
-                .contentType("application/vnd.mdg+json").
-                when()
-                .request().body(JsonOutput.toJson(transaction))
-                .post(API.Transactions)
+        def transaction = TransactionFixture.rentTransaction()
+        transaction.data.attributes.operations = new ArrayList()
+
         then: "Error should be returned"
-        response.then()
-                .assertThat().statusCode(412)
-                .assertThat().contentType("application/vnd.mdg+json")
-                .body("errors[0].code", equalTo("TRANSACTION_EMPTY"))
+        given().body(JsonOutput.toJson(transaction))
+                .when().post(API.Transactions)
+                .then().spec(errorSpec(412, "TRANSACTION_EMPTY"))
     }
 
     def "Empty operations are ignored"() {
-        given: "Several accounts"
-        def accounts = f.prepareAccounts()
-
         when: "Transaction without operations is submitted"
-        def transaction = [
-                "data": [
-                        "type"      : "transaction",
-                        "attributes": [
-                                "timestamp" : "2017-02-05T13:54:35",
-                                "comment"   : "Test transaction",
-                                "tags"      : ["test", "transaction"],
-                                "operations": [
-                                        [
-                                                "account_id": accounts["income"],
-                                                "amount"    : 0
-                                        ],
-                                        [
-                                                "account_id": accounts["asset"],
-                                                "amount"    : 0
-                                        ]
-                                ]
-                        ]
-                ]
-        ]
-        def response = given()
-                .contentType("application/vnd.mdg+json").
-                when()
-                .request().body(JsonOutput.toJson(transaction))
-                .post(API.Transactions)
+        def transaction = TransactionFixture.rentTransaction()
+        transaction.data.attributes.operations[0].amount = 0
+        transaction.data.attributes.operations[1].amount = 0
+        transaction.data.attributes.operations[2].amount = 0
+
         then: "Error should be returned"
-        response.then()
-                .assertThat().statusCode(412)
-                .assertThat().contentType("application/vnd.mdg+json")
-                .body("errors[0].code", equalTo("TRANSACTION_EMPTY"))
+        given().body(JsonOutput.toJson(transaction))
+                .when().post(API.Transactions)
+                .then().spec(errorSpec(412, "TRANSACTION_EMPTY"))
+
     }
 
     def "Unbalanced transactions are not allowed"() {
-        given: "Several accounts"
-        def accounts = f.prepareAccounts()
+        when: "Unbalanced transaction is submitted"
+        def transaction = TransactionFixture.rentTransaction()
+        transaction.data.attributes.operations[0].amount = -50
+        transaction.data.attributes.operations[1].amount = 100
+        transaction.data.attributes.operations[2].amount = 25
 
-        when: "Transaction without operations is submitted"
-        def transaction = [
-                "data": [
-                        "type"      : "transaction",
-                        "attributes": [
-                                "timestamp" : "2017-02-05T13:54:35",
-                                "comment"   : "Test transaction",
-                                "tags"      : ["test", "transaction"],
-                                "operations": [
-                                        [
-                                                "account_id": accounts["income"],
-                                                "amount"    : -50
-                                        ],
-                                        [
-                                                "account_id": accounts["asset"],
-                                                "amount"    : 100
-                                        ]
-                                ]
-                        ]
-                ]
-        ]
-        def response = given()
-                .contentType("application/vnd.mdg+json").
-                when()
-                .request().body(JsonOutput.toJson(transaction))
-                .post(API.Transactions)
         then: "Error should be returned"
-        response.then()
-                .assertThat().statusCode(412)
-                .assertThat().contentType("application/vnd.mdg+json")
-                .body("errors[0].code", equalTo("TRANSACTION_NOT_BALANCED"))
+        given().body(JsonOutput.toJson(transaction))
+                .when().post(API.Transactions)
+                .then().spec(errorSpec(412, "TRANSACTION_NOT_BALANCED"))
     }
 }

@@ -1,7 +1,7 @@
 package org.akashihi.mdg.apitest.tests.transaction
 
-import com.jayway.jsonpath.JsonPath
 import groovy.json.JsonOutput
+import org.akashihi.mdg.apitest.fixtures.AccountFixture
 import org.akashihi.mdg.apitest.fixtures.TransactionFixture
 import org.akashihi.mdg.apitest.API
 import spock.lang.*
@@ -10,34 +10,29 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 
 import static io.restassured.RestAssured.*
+import static org.akashihi.mdg.apitest.apiConnectionBase.createSpec
+import static org.akashihi.mdg.apitest.apiConnectionBase.readSpec
 import static org.akashihi.mdg.apitest.apiConnectionBase.setupAPI
 import static org.hamcrest.Matchers.*
 import static org.junit.Assert.assertThat
 
 class TransactionFilterSpecification extends Specification {
-    TransactionFixture f = new TransactionFixture()
-
     def setupSpec() {
         setupAPI()
     }
 
     def "User sorts transaction on timestamp descending"() {
         given: "Several transactions with different dates"
-        f.makeTransactions()
+        TransactionFixture.createMultiple()
 
         when: "Transaction list sorted by timestamp requested"
         def response = given()
                 .queryParam("sort", "timestamp")
-                .contentType("application/vnd.mdg+json").
-                when()
-                .get(API.Transactions)
+                .when().get(API.Transactions)
 
         then: "Every timestamp in returned list should be equal or less then previous"
-        def body = JsonPath.parse(response.then()
-                .assertThat().statusCode(200)
-                .assertThat().contentType("application/vnd.mdg+json")
-                .extract().asString())
-        def ts = body.read("data[*].attributes.timestamp", List.class)
+        def ts = response.then().spec(readSpec())
+            .extract().path("data.findAll().attributes.timestamp")
         def current = ts.first()
         ts.each{ x ->
             assertThat(x, lessThanOrEqualTo(current))
@@ -47,21 +42,16 @@ class TransactionFilterSpecification extends Specification {
 
     def "User requests transactions after specified date"() {
         given: "Several transactions with different dates"
-        f.makeTransactions()
+        TransactionFixture.createMultiple()
 
         when: "Transaction list filtered using notEarlier"
         def response = given()
                 .queryParam("notEarlier", '2017-02-06T00:00:00')
-                .contentType("application/vnd.mdg+json").
-                when()
-                .get(API.Transactions)
+                .when().get(API.Transactions)
 
         then: "Every timestamp in returned list should be equal or greater then specified"
-        def body = JsonPath.parse(response.then()
-                .assertThat().statusCode(200)
-                .assertThat().contentType("application/vnd.mdg+json")
-                .extract().asString())
-        def ts = body.read("data[*].attributes.timestamp", List.class)
+        def ts = response.then().spec(readSpec())
+                .extract().path("data.findAll().attributes.timestamp")
         ts.each{ x ->
             assertThat(LocalDateTime.parse(x).toLocalDate(), greaterThanOrEqualTo(LocalDate.parse("2017-02-06")))
         }
@@ -69,21 +59,16 @@ class TransactionFilterSpecification extends Specification {
 
     def "User requests transactions before specified date"() {
         given: "Several transactions with different dates"
-        f.makeTransactions()
+        TransactionFixture.createMultiple()
 
         when: "Transaction list filtered using notLater"
         def response = given()
                 .queryParam("notLater", '2017-02-05T00:00:00')
-                .contentType("application/vnd.mdg+json").
-                when()
-                .get(API.Transactions)
+                .when().get(API.Transactions)
 
         then: "Every timestamp in returned list should be equal or less then specified"
-        def body = JsonPath.parse(response.then()
-                .assertThat().statusCode(200)
-                .assertThat().contentType("application/vnd.mdg+json")
-                .extract().asString())
-        def ts = body.read("data[*].attributes.timestamp", List.class)
+        def ts = response.then().spec(readSpec())
+                .extract().path("data.findAll().attributes.timestamp")
         ts.each{ x ->
             assertThat(LocalDateTime.parse(x).toLocalDate(), lessThanOrEqualTo(LocalDate.parse("2017-02-04")))
         }
@@ -91,22 +76,17 @@ class TransactionFilterSpecification extends Specification {
 
     def "User requests transactions between specified dates"() {
         given: "Several transactions with different dates"
-        f.makeTransactions()
+        TransactionFixture.createMultiple()
 
         when: "Transaction list filtered using notLater"
         def response = given()
                 .queryParam("notEarlier", '2017-02-05T00:00:00')
                 .queryParam("notLater", '2017-02-06T00:00:00')
-                .contentType("application/vnd.mdg+json").
-                when()
-                .get(API.Transactions)
+                .when().get(API.Transactions)
 
         then: "Every timestamp in returned list should be equal to specified"
-        def body = JsonPath.parse(response.then()
-                .assertThat().statusCode(200)
-                .assertThat().contentType("application/vnd.mdg+json")
-                .extract().asString())
-        def ts = body.read("data[*].attributes.timestamp", List.class)
+        def ts = response.then().spec(readSpec())
+                .extract().path("data.findAll().attributes.timestamp")
         ts.each{ x ->
             assertThat(LocalDateTime.parse(x).toLocalDate(), is(LocalDate.parse("2017-02-05")))
         }
@@ -115,21 +95,16 @@ class TransactionFilterSpecification extends Specification {
 
     def "User sorts transaction on timestamp ascending"() {
         given: "Several transactions with different dates"
-        f.makeTransactions()
+        TransactionFixture.createMultiple()
 
         when: "Transaction list sorted by timestamp requested"
         def response = given()
                 .queryParam("sort", "-timestamp")
-                .contentType("application/vnd.mdg+json").
-                when()
-                .get(API.Transactions)
+                .when().get(API.Transactions)
 
         then: "Every timestamp in returned list should be equal or less then previous"
-        def body = JsonPath.parse(response.then()
-                .assertThat().statusCode(200)
-                .assertThat().contentType("application/vnd.mdg+json")
-                .extract().asString())
-        def ts = body.read("data[*].attributes.timestamp", List.class)
+        def ts = response.then().spec(readSpec())
+                .extract().path("data.findAll().attributes.timestamp")
         def current = ts.first()
         ts.each{ x ->
             assertThat(x, greaterThanOrEqualTo(current))
@@ -139,7 +114,9 @@ class TransactionFilterSpecification extends Specification {
 
     def "User filters transaction by account"() {
         given: "Several accounts and transaction on them"
-        def accounts = f.prepareAccounts()
+        def incomeId = AccountFixture.create(AccountFixture.incomeAccount())
+        def assetId = AccountFixture.create(AccountFixture.assetAccount())
+        def expenseId = AccountFixture.create(AccountFixture.expenseAccount())
         def transaction = [
                 "data": [
                         "type"      : "transaction",
@@ -149,44 +126,33 @@ class TransactionFilterSpecification extends Specification {
                                 "tags"      : ["test", "transaction"],
                                 "operations": [
                                         [
-                                                "account_id": accounts["income"],
+                                                "account_id": incomeId,
                                                 "amount"    : -150
                                         ],
                                         [
-                                                "account_id": accounts["asset"],
+                                                "account_id": assetId,
                                                 "amount"    : 50
                                         ],
                                         [
-                                                "account_id": accounts["expense"],
+                                                "account_id": expenseId,
                                                 "amount"    : 100
                                         ]
                                 ]
                         ]
                 ]
         ]
-        given()
-                .contentType("application/vnd.mdg+json").
-                when()
-                .request().body(JsonOutput.toJson(transaction))
-                .post(API.Transactions).
-                then()
-                .assertThat().statusCode(201)
-                .assertThat().contentType("application/vnd.mdg+json")
+        given().body(JsonOutput.toJson(transaction))
+                .when().post(API.Transactions)
+                .then().spec(createSpec("/api/transaction"))
 
 
         when: "Transaction is filtered by account_id"
-        def asset_account_id = accounts["asset"]
         def response = given()
-                .queryParam("filter", "{\"account_id\": [${asset_account_id}]} ")
-                .contentType("application/vnd.mdg+json").
-                when()
-                .get(API.Transactions)
+                .queryParam("filter", "{\"account_id\": [${assetId}]} ")
+                .when().get(API.Transactions)
 
         then: "Should only return transactions, matching filter"
-        def body = JsonPath.parse(response.then()
-                .assertThat().statusCode(200)
-                .assertThat().contentType("application/vnd.mdg+json")
-                .extract().asString())
-        assertThat(body.read("data", List.class).size(), is(1)) //As we use new accounts for each test, there should be only one matching transaction
+        response.then().spec(readSpec())
+                .body("data.size()", is(1)) //As we use new accounts for each test, there should be only one matching transaction
     }
 }

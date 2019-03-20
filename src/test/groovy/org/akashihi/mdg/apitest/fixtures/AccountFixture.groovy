@@ -52,6 +52,20 @@ class AccountFixture {
         ]
     }
 
+    static def usdAccount(Long category_id = null) {
+        return [
+                "data": [
+                        "type"      : "account",
+                        "attributes": [
+                                "account_type": "asset",
+                                "currency_id" : 840,
+                                "name"        : "USD",
+                                "category_id" : category_id
+                        ]
+                ]
+        ]
+    }
+
     static def create() {
         create(expenseAccount())
     }

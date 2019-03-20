@@ -7,6 +7,8 @@ import org.akashihi.mdg.apitest.API
 
 import static io.restassured.RestAssured.given
 import static io.restassured.RestAssured.when
+import static org.akashihi.mdg.apitest.apiConnectionBase.modifySpec
+import static org.akashihi.mdg.apitest.apiConnectionBase.readSpec
 import static org.akashihi.mdg.apitest.apiConnectionBase.setupAPI
 import static org.hamcrest.Matchers.equalTo
 
@@ -18,175 +20,84 @@ class TransactionAccountSpecification extends Specification {
     }
 
     def 'New transaction changes account balance'() {
-        given: "Several accounts"
-        def accounts = f.prepareAccounts()
+        given: "Transaction on accounts"
+        def transaction = TransactionFixture.rentTransaction()
+        def incomeId = transaction.data.attributes.operations[0].account_id
+        def assetId = transaction.data.attributes.operations[1].account_id
+        def expenseId = transaction.data.attributes.operations[2].account_id
 
         when: "New transaction on those accounts is submitted"
-        def transaction = [
-                "data": [
-                        "type"      : "transaction",
-                        "attributes": [
-                                "timestamp" : '2017-02-05T16:45:36',
-                                "comment"   : "Test transaction",
-                                "tags"      : ["test", "transaction"],
-                                "operations": [
-                                        [
-                                                "account_id": accounts["income"],
-                                                "amount"    : -150
-                                        ],
-                                        [
-                                                "account_id": accounts["asset"],
-                                                "amount"    : 150
-                                        ]
-                                ]
-                        ]
-                ]
-        ]
-        given()
-                .contentType("application/vnd.mdg+json").
-                when()
-                .request().body(JsonOutput.toJson(transaction))
-                .post(API.Transactions).
-                then()
-                .assertThat().statusCode(201)
+        TransactionFixture.create(transaction)
 
         then: "Balance on accounts is changed"
-        given()
-                .contentType("application/vnd.mdg+json").
-                when()
-                .get(API.Account, accounts['income']).
-                then()
-                .assertThat().statusCode(200)
-                .assertThat().contentType("application/vnd.mdg+json")
+        given().when().get(API.Account, incomeId)
+                .then().spec(readSpec())
                 .body("data.attributes.balance", equalTo(-150))
 
-        given()
-                .contentType("application/vnd.mdg+json").
-                when()
-                .get(API.Account, accounts['asset']).
-                then()
-                .assertThat().statusCode(200)
-                .assertThat().contentType("application/vnd.mdg+json")
-                .body("data.attributes.balance", equalTo(150))
+        given().when().get(API.Account, assetId)
+                .then().spec(readSpec())
+                .body("data.attributes.balance", equalTo(50))
+
+        given().when().get(API.Account, expenseId)
+                .then().spec(readSpec())
+                .body("data.attributes.balance", equalTo(100))
     }
 
-    def 'Chaning transaction ops is reflected on accounts'() {
+    def 'Changing transaction ops is reflected on accounts'() {
         given: "New transaction is submitted"
-        def accounts = f.prepareAccounts()
-        def transaction = [
-                "data": [
-                        "type"      : "transaction",
-                        "attributes": [
-                                "timestamp" : '2017-02-05T16:45:36',
-                                "comment"   : "Test transaction",
-                                "tags"      : ["test", "transaction"],
-                                "operations": [
-                                        [
-                                                "account_id": accounts["income"],
-                                                "amount"    : -150
-                                        ],
-                                        [
-                                                "account_id": accounts["asset"],
-                                                "amount"    : 150
-                                        ]
-                                ]
-                        ]
-                ]
-        ]
-        def txId = given()
-                .contentType("application/vnd.mdg+json").
-                when()
-                .request().body(JsonOutput.toJson(transaction))
-                .post(API.Transactions).
-                then()
-                .assertThat().statusCode(201)
-                .assertThat().contentType("application/vnd.mdg+json")
-                .extract().path("data.id")
+        def transaction = TransactionFixture.rentTransaction()
+        def incomeId = transaction.data.attributes.operations[0].account_id
+        def assetId = transaction.data.attributes.operations[1].account_id
+        def expenseId = transaction.data.attributes.operations[2].account_id
+
+        def txId = TransactionFixture.create(transaction)
 
         when: "Transaction is modified"
         transaction.data.attributes.operations[0].amount = -30
-        transaction.data.attributes.operations[1].amount = 30
-        given()
-                .contentType("application/vnd.mdg+json").
-                when()
-                .request().body(JsonOutput.toJson(transaction))
-                .put(API.Transaction, txId)
+        transaction.data.attributes.operations[2].amount = -20
+        given().body(JsonOutput.toJson(transaction))
+                .when().put(API.Transaction, txId)
+                .then().spec(modifySpec())
 
         then: "Accounts balances should be changed"
-        given()
-                .contentType("application/vnd.mdg+json").
-                when()
-                .get(API.Account, accounts['income']).
-                then()
-                .assertThat().statusCode(200)
-                .assertThat().contentType("application/vnd.mdg+json")
+        given().when().get(API.Account, incomeId)
+                .then().spec(readSpec())
                 .body("data.attributes.balance", equalTo(-30))
 
-        given()
-                .contentType("application/vnd.mdg+json").
-                when()
-                .get(API.Account, accounts['asset']).
-                then()
-                .assertThat().statusCode(200)
-                .assertThat().contentType("application/vnd.mdg+json")
-                .body("data.attributes.balance", equalTo(30))
+        given().when().get(API.Account, assetId)
+                .then().spec(readSpec())
+                .body("data.attributes.balance", equalTo(50))
+
+        given().when().get(API.Account, expenseId)
+                .then().spec(readSpec())
+                .body("data.attributes.balance", equalTo(-20))
     }
 
     def 'Deleting transaction reverts changes on accounts'() {
         given: "New transaction is submitted"
-        def accounts = f.prepareAccounts()
-        def transaction = [
-                "data": [
-                        "type"      : "transaction",
-                        "attributes": [
-                                "timestamp" : '2017-02-05T16:45:36',
-                                "comment"   : "Test transaction",
-                                "tags"      : ["test", "transaction"],
-                                "operations": [
-                                        [
-                                                "account_id": accounts["income"],
-                                                "amount"    : -150
-                                        ],
-                                        [
-                                                "account_id": accounts["asset"],
-                                                "amount"    : 150
-                                        ]
-                                ]
-                        ]
-                ]
-        ]
-        def txId = given()
-                .contentType("application/vnd.mdg+json").
-                when()
-                .request().body(JsonOutput.toJson(transaction))
-                .post(API.Transactions).
-                then()
-                .assertThat().statusCode(201)
-                .assertThat().contentType("application/vnd.mdg+json")
-                .extract().path("data.id")
+        def transaction = TransactionFixture.rentTransaction()
+        def incomeId = transaction.data.attributes.operations[0].account_id
+        def assetId = transaction.data.attributes.operations[1].account_id
+        def expenseId = transaction.data.attributes.operations[2].account_id
+
+        def txId = TransactionFixture.create(transaction)
 
 
         when: "Transaction is deleted"
         when().delete(API.Transaction, txId)
-                .then().assertThat().statusCode(204)
+                .then().statusCode(204)
 
         then: "Accounts should have zero balance"
-        given()
-                .contentType("application/vnd.mdg+json").
-                when()
-                .get(API.Account, accounts['income']).
-                then()
-                .assertThat().statusCode(200)
-                .assertThat().contentType("application/vnd.mdg+json")
+        given().when().get(API.Account, incomeId)
+                .then().spec(readSpec())
                 .body("data.attributes.balance", equalTo(0))
 
-        given()
-                .contentType("application/vnd.mdg+json").
-                when()
-                .get(API.Account, accounts['asset']).
-                then()
-                .assertThat().statusCode(200)
-                .assertThat().contentType("application/vnd.mdg+json")
+        given().when().get(API.Account, assetId)
+                .then().spec(readSpec())
+                .body("data.attributes.balance", equalTo(0))
+
+        given().when().get(API.Account, expenseId)
+                .then().spec(readSpec())
                 .body("data.attributes.balance", equalTo(0))
     }
 
