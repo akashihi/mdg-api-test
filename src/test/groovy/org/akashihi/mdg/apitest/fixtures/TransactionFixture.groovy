@@ -85,31 +85,6 @@ class TransactionFixture {
                 .extract().path("data.id")
     }
 
-    public def makeIncomeTransaction() {
-        def accounts = prepareAccounts()
-        def transaction = [
-                "data": [
-                        "type"      : "transaction",
-                        "attributes": [
-                                "timestamp" : '2017-02-05T16:45:36',
-                                "comment"   : "Income transaction",
-                                "tags"      : ["income", "transaction"],
-                                "operations": [
-                                        [
-                                                "account_id": accounts["income"],
-                                                "amount"    : -150
-                                        ],
-                                        [
-                                                "account_id": accounts["asset"],
-                                                "amount"    : 150
-                                        ]
-                                ]
-                        ]
-                ]
-        ]
-        makeTransaction(transaction)
-    }
-
     static def multiCurrencyTransaction() {
         def assetId = AccountFixture.create(AccountFixture.assetAccount())
         def usdAssetId = AccountFixture.create(AccountFixture.usdAccount())

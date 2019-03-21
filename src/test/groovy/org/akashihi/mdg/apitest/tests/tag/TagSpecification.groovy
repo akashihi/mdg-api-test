@@ -1,38 +1,28 @@
 package org.akashihi.mdg.apitest.tests.tag
 
-import com.jayway.jsonpath.JsonPath
 import org.akashihi.mdg.apitest.fixtures.TransactionFixture
 import spock.lang.Specification
 import org.akashihi.mdg.apitest.API
 
-import static io.restassured.RestAssured.given
+import static io.restassured.RestAssured.when
+import static org.akashihi.mdg.apitest.apiConnectionBase.readSpec
 import static org.akashihi.mdg.apitest.apiConnectionBase.setupAPI
 import static org.hamcrest.CoreMatchers.hasItems
-import static org.junit.Assert.assertThat
 
 class TagSpecification extends Specification {
-    TransactionFixture f = new TransactionFixture();
-
     def setupSpec() {
-        setupAPI();
+        setupAPI()
     }
 
     def 'When transaction with new tag is posted, tag should be in tags list'() {
        given: 'Transaction with some tags'
-       f.makeIncomeTransaction()
+       TransactionFixture.create(TransactionFixture.incomeTransaction())
 
        when: 'Tag list is retrieved'
-       def response = given()
-               .contentType("application/vnd.mdg+json").
-               when()
-               .get(API.Tags)
+       def response = when().get(API.Tags)
 
        then: "It should contain transaction tags"
-       def body = JsonPath.parse(response.then()
-               .assertThat().statusCode(200)
-               .assertThat().contentType("application/vnd.mdg+json")
-               .extract().asString())
-       def tags = body.read("data[*].attributes.txtag", List.class)
-       assertThat(tags, hasItems("income", "transaction"))
+       response.then().spec(readSpec())
+            .body("data.findAll().attributes.txtag", hasItems("income", "transaction"))
     }
 }
