@@ -2,6 +2,7 @@ package org.akashihi.mdg.apitest.tests.budget
 
 import com.jayway.jsonpath.JsonPath
 import groovy.json.JsonOutput
+import org.akashihi.mdg.apitest.fixtures.AccountFixture
 import org.akashihi.mdg.apitest.fixtures.BudgetFixture
 import org.akashihi.mdg.apitest.fixtures.TransactionFixture
 import org.akashihi.mdg.apitest.util.RateConversion
@@ -9,88 +10,66 @@ import spock.lang.Specification
 import org.akashihi.mdg.apitest.API
 
 import static io.restassured.RestAssured.given
+import static io.restassured.RestAssured.when
+import static org.akashihi.mdg.apitest.apiConnectionBase.modifySpec
+import static org.akashihi.mdg.apitest.apiConnectionBase.readSpec
 import static org.akashihi.mdg.apitest.apiConnectionBase.setupAPI
 import static org.hamcrest.Matchers.equalTo
 import static org.junit.Assert.assertThat
 
 class BudgetStateSpecification extends Specification {
-    static BudgetFixture bFixture = new BudgetFixture()
-    static TransactionFixture tFixture = new TransactionFixture()
-    static def accounts
+    static def incomeId
+    static def assetId
+    static def expenseId
     static def rateConverter
 
     def setupSpec() {
         setupAPI()
         rateConverter = new RateConversion()
-        accounts = tFixture.prepareAccounts()
-        bFixture.makeBudget(bFixture.incomeStateBudget)
+        incomeId = AccountFixture.create(AccountFixture.incomeAccount())
+        assetId = AccountFixture.create(AccountFixture.assetAccount())
+        expenseId = AccountFixture.create(AccountFixture.expenseAccount())
+        BudgetFixture.create(BudgetFixture.budget("2016-12-01", "2016-12-31"))
     }
 
     def cleanupSpec() {
-        bFixture.removeBudget("20161201")
+        BudgetFixture.remove("20161201")
     }
 
     def 'Budget expected income should follow entries expected income'() {
-        def budgetResponse = given()
-                .contentType("application/vnd.mdg+json").
-                when()
-                .get(API.Budget, "20161201")
-        def budgetBody = JsonPath.parse(budgetResponse.then()
-                .assertThat().statusCode(200)
-                .assertThat().contentType("application/vnd.mdg+json")
-                .extract().asString())
-        def expectedIncome = budgetBody.read("data.attributes.state.income.expected")
+        given: "Empty budget"
+        BigDecimal expectedIncome = when().get(API.Budget, "20161201")
+                .then().spec(readSpec())
+                .extract().path("data.attributes.state.income.expected")
 
-        assertThat(new BigDecimal(expectedIncome), equalTo(new BigDecimal(0)))
+        assertThat(expectedIncome, equalTo(new BigDecimal(0)))
 
         when: "Budget entry is modified"
-        def accountId = accounts["income"]
-        def listResponse = given()
-                .contentType("application/vnd.mdg+json").
-                when()
-                .get(API.BudgetEntries,"20161201")
-        def listBody =  JsonPath.parse(listResponse.then()
-                .assertThat().statusCode(200)
-                .assertThat().contentType("application/vnd.mdg+json")
-                .extract().asString())
-        def entry = listBody.read("data[?(@.attributes.account_id == ${accountId})]", List.class).first()
+        def listBody = when().get(API.BudgetEntries,"20161201")
+                .then().spec(readSpec())
+                .extract().asString()
+        def entry = JsonPath.parse(listBody).read("data[?(@.attributes.account_id == ${incomeId})]", List.class).first()
         entry.attributes.expected_amount=3620
-        given()
-                .contentType("application/vnd.mdg+json")
-                .when()
-                .request().body(JsonOutput.toJson(["data": entry]))
-                .put(API.BudgetEntry,"20161201", entry.id).
-                then()
-                .assertThat().statusCode(202)
+        given().body(JsonOutput.toJson(["data": entry]))
+                .when().put(API.BudgetEntry,"20161201", entry.id).
+                then().spec(modifySpec())
 
         then: "Budget expected income should be 3620"
-        def updatedResponse = given()
-                .contentType("application/vnd.mdg+json").
-                when()
-                .get(API.Budget, "20161201")
-        def updatedBody = JsonPath.parse(updatedResponse.then()
-                .assertThat().statusCode(200)
-                .assertThat().contentType("application/vnd.mdg+json")
-                .extract().asString())
-        def updatedAmount = updatedBody.read("data.attributes.state.income.expected")
+        BigDecimal updatedAmount = when().get(API.Budget, "20161201")
+                .then().spec(readSpec())
+                .extract().path("data.attributes.state.income.expected")
 
-        def expected = rateConverter.applyRate(3620, rateConverter.getCurrencyForAccount(accountId))
+        BigDecimal expected = rateConverter.applyRate(3620, rateConverter.getCurrencyForAccount(incomeId))
 
-        assertThat(new BigDecimal(updatedAmount), equalTo(new BigDecimal(expected)))
+        assertThat(updatedAmount.toBigInteger(), equalTo(expected.toBigInteger()))
     }
 
     def 'Budget actual income should follow income transactions'() {
-        def budgetResponse = given()
-                .contentType("application/vnd.mdg+json").
-                when()
-                .get(API.Budget, "20161201")
-        def budgetBody = JsonPath.parse(budgetResponse.then()
-                .assertThat().statusCode(200)
-                .assertThat().contentType("application/vnd.mdg+json")
-                .extract().asString())
-        def expectedIncome = budgetBody.read("data.attributes.state.income.actual")
+        BigDecimal actualIncome = when().get(API.Budget, "20161201")
+                .then().spec(readSpec())
+                .extract().path("data.attributes.state.income.actual")
 
-        assertThat(new BigDecimal(expectedIncome), equalTo(new BigDecimal(0)))
+        assertThat(actualIncome, equalTo(new BigDecimal(0)))
 
         when: "Transaction os posted"
         def transaction = [
@@ -102,98 +81,68 @@ class BudgetStateSpecification extends Specification {
                                 "tags": [],
                                 "operations": [
                                         [
-                                                "account_id": accounts["income"],
+                                                "account_id": incomeId,
                                                 "amount"    : -9000
                                         ],
                                         [
-                                                "account_id": accounts["asset"],
+                                                "account_id": assetId,
                                                 "amount"    : 9000
                                         ]
                                 ]
                         ]
                 ]
         ]
-        tFixture.makeTransaction(transaction)
+        def txId = TransactionFixture.create(transaction)
 
         then: "Budget expected income should be 9000"
-        def updatedResponse = given()
-                .contentType("application/vnd.mdg+json").
-                when()
-                .get(API.Budget, "20161201")
-        def updatedBody = JsonPath.parse(updatedResponse.then()
-                .assertThat().statusCode(200)
-                .assertThat().contentType("application/vnd.mdg+json")
-                .extract().asString())
-        def updatedAmount = updatedBody.read("data.attributes.state.income.actual")
+        BigDecimal updatedAmount = when().get(API.Budget, "20161201")
+                .then().spec(readSpec())
+                .extract().path("data.attributes.state.income.actual")
 
-        def expected = rateConverter.applyRate(9000, rateConverter.getCurrencyForAccount(accounts["income"]))
+        BigDecimal expected = rateConverter.applyRate(9000, rateConverter.getCurrencyForAccount(incomeId))
 
-        assertThat(new BigDecimal(updatedAmount), equalTo(new BigDecimal(expected)))
+        assertThat(updatedAmount.toBigInteger(), equalTo(expected.toBigInteger()))
+
+        when().delete(API.Transaction, txId)
     }
 
     def 'Budget expected expenses should follow entries expected spendings'() {
-        def budgetResponse = given()
-                .contentType("application/vnd.mdg+json").
-                when()
-                .get(API.Budget, "20161201")
-        def budgetBody = JsonPath.parse(budgetResponse.then()
-                .assertThat().statusCode(200)
-                .assertThat().contentType("application/vnd.mdg+json")
-                .extract().asString())
-        def expectedExpenses = budgetBody.read("data.attributes.state.expense.expected")
+        given: "Empty budget"
+        BigDecimal expectedExpenses = when().get(API.Budget, "20161201")
+                .then().spec(readSpec())
+                .extract().path("data.attributes.state.expense.expected")
 
-        assertThat(new BigDecimal(expectedExpenses), equalTo(new BigDecimal(0)))
+        assertThat(expectedExpenses, equalTo(new BigDecimal(0)))
 
         when: "Budget entry is modified"
-        def accountId = accounts["expense"]
-        def listResponse = given()
-                .contentType("application/vnd.mdg+json").
-                when()
-                .get(API.BudgetEntries,"20161201")
-        def listBody =  JsonPath.parse(listResponse.then()
-                .assertThat().statusCode(200)
-                .assertThat().contentType("application/vnd.mdg+json")
-                .extract().asString())
-        def entry = listBody.read("data[?(@.attributes.account_id == ${accountId})]", List.class).first()
+        def listBody = when().get(API.BudgetEntries,"20161201")
+                .then().spec(readSpec())
+                .extract().asString()
+        def entry = JsonPath.parse(listBody).read("data[?(@.attributes.account_id == ${expenseId})]", List.class).first()
         entry.attributes.expected_amount=1924
-        given()
-                .contentType("application/vnd.mdg+json")
-                .when()
-                .request().body(JsonOutput.toJson(["data": entry]))
-                .put(API.BudgetEntry,"20161201", entry.id).
-                then()
-                .assertThat().statusCode(202)
+        given().body(JsonOutput.toJson(["data": entry]))
+                .when().put(API.BudgetEntry,"20161201", entry.id).
+                then().spec(modifySpec())
 
         then: "Budget expected expense should be 1924"
-        def updatedResponse = given()
-                .contentType("application/vnd.mdg+json").
-                when()
-                .get(API.Budget, "20161201")
-        def updatedBody = JsonPath.parse(updatedResponse.then()
-                .assertThat().statusCode(200)
-                .assertThat().contentType("application/vnd.mdg+json")
-                .extract().asString())
-        def updatedAmount = updatedBody.read("data.attributes.state.expense.expected")
+        BigDecimal updatedAmount = when().get(API.Budget, "20161201")
+                .then().spec(readSpec())
+                .extract().path("data.attributes.state.expense.expected")
 
-        def expected = rateConverter.applyRate(1924, rateConverter.getCurrencyForAccount(accountId))
+        BigDecimal expected = rateConverter.applyRate(1924, rateConverter.getCurrencyForAccount(expenseId))
 
-        assertThat(new BigDecimal(updatedAmount), equalTo(new BigDecimal(expected)))
+        assertThat(updatedAmount.toBigInteger(), equalTo(expected.toBigInteger()))
     }
 
     def 'Budget actual spendings should follow income transactions'() {
-        def budgetResponse = given()
-                .contentType("application/vnd.mdg+json").
-                when()
-                .get(API.Budget, "20161201")
-        def budgetBody = JsonPath.parse(budgetResponse.then()
-                .assertThat().statusCode(200)
-                .assertThat().contentType("application/vnd.mdg+json")
-                .extract().asString())
-        def expectedSpendings = budgetBody.read("data.attributes.state.expense.actual")
+        given: "Empty budget"
+        BigDecimal actualExpenses = when().get(API.Budget, "20161201")
+                .then().spec(readSpec())
+                .extract().path("data.attributes.state.expense.actual")
 
-        assertThat(new BigDecimal(expectedSpendings), equalTo(new BigDecimal(0)))
+        assertThat(actualExpenses, equalTo(new BigDecimal(0)))
 
-        when: "Transaction os posted"
+        when: "Transaction is posted"
         def transaction = [
                 "data": [
                         "type"      : "transaction",
@@ -203,32 +152,28 @@ class BudgetStateSpecification extends Specification {
                                 "tags": [],
                                 "operations": [
                                         [
-                                                "account_id": accounts["asset"],
+                                                "account_id": assetId,
                                                 "amount"    : -9000
                                         ],
                                         [
-                                                "account_id": accounts["expense"],
+                                                "account_id": expenseId,
                                                 "amount"    : 9000
                                         ]
                                 ]
                         ]
                 ]
         ]
-        tFixture.makeTransaction(transaction)
+        def txId = TransactionFixture.create(transaction)
 
         then: "Budget expected income should be 9000"
-        def updatedResponse = given()
-                .contentType("application/vnd.mdg+json").
-                when()
-                .get(API.Budget, "20161201")
-        def updatedBody = JsonPath.parse(updatedResponse.then()
-                .assertThat().statusCode(200)
-                .assertThat().contentType("application/vnd.mdg+json")
-                .extract().asString())
-        def updatedAmount = updatedBody.read("data.attributes.state.expense.actual")
+        BigDecimal updatedAmount = when().get(API.Budget, "20161201")
+                .then().spec(readSpec())
+                .extract().path("data.attributes.state.expense.actual")
 
-        def expected = rateConverter.applyRate(9000, rateConverter.getCurrencyForAccount(accounts["expense"]))
+        BigDecimal expected = rateConverter.applyRate(9000, rateConverter.getCurrencyForAccount(expenseId))
 
-        assertThat(new BigDecimal(updatedAmount), equalTo(new BigDecimal(expected)))
+        assertThat(updatedAmount.toBigInteger(), equalTo(expected.toBigInteger()))
+
+        when().delete(API.Transaction, txId)
     }
 }

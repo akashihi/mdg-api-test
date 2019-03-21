@@ -1,7 +1,7 @@
 package org.akashihi.mdg.apitest.tests.budget
 
-import com.jayway.jsonpath.JsonPath
 import groovy.json.JsonOutput
+import org.akashihi.mdg.apitest.fixtures.AccountFixture
 import org.akashihi.mdg.apitest.fixtures.BudgetFixture
 import org.akashihi.mdg.apitest.fixtures.TransactionFixture
 import org.akashihi.mdg.apitest.util.RateConversion
@@ -10,22 +10,26 @@ import org.akashihi.mdg.apitest.API
 
 import static io.restassured.RestAssured.given
 import static io.restassured.RestAssured.when
+import static org.akashihi.mdg.apitest.apiConnectionBase.modifySpec
+import static org.akashihi.mdg.apitest.apiConnectionBase.readSpec
 import static org.akashihi.mdg.apitest.apiConnectionBase.setupAPI
 import static org.hamcrest.Matchers.equalTo
 import static org.junit.Assert.assertThat
 
 class BudgetTransactionSpecification extends Specification {
-    static BudgetFixture bFixture = new BudgetFixture()
-    static TransactionFixture tFixture = new TransactionFixture()
-    static def accounts
+    static def incomeId
+    static def assetId
+    static def expenseId
     static def transaction
     static def rateConverter
 
     def setupSpec() {
         setupAPI()
         rateConverter = new RateConversion()
-        accounts = tFixture.prepareAccounts()
-        bFixture.makeBudget(bFixture.aprBudget)
+        incomeId = AccountFixture.create(AccountFixture.incomeAccount())
+        assetId = AccountFixture.create(AccountFixture.assetAccount())
+        expenseId = AccountFixture.create(AccountFixture.expenseAccount())
+        BudgetFixture.create(BudgetFixture.budget('2017-04-01', '2017-04-30'))
 
         transaction = [
                 "data": [
@@ -36,15 +40,15 @@ class BudgetTransactionSpecification extends Specification {
                                 "tags"      : ["test", "transaction"],
                                 "operations": [
                                         [
-                                                "account_id": accounts["income"],
+                                                "account_id": incomeId,
                                                 "amount"    : -150
                                         ],
                                         [
-                                                "account_id": accounts["asset"],
+                                                "account_id": assetId,
                                                 "amount"    : 50
                                         ],
                                         [
-                                                "account_id": accounts["expense"],
+                                                "account_id": expenseId,
                                                 "amount"    : 100
                                         ]
                                 ]
@@ -55,113 +59,76 @@ class BudgetTransactionSpecification extends Specification {
     }
 
     def cleanupSpec() {
-        bFixture.removeBudget("20170401")
+        BudgetFixture.remove("20170401")
     }
 
     def 'Budget actual amount should change when transaction is submitted'() {
         given: 'An new budget'
-        def budgetResponse = given()
-                .contentType("application/vnd.mdg+json").
-                when()
-                .get(API.Budget, "20170401")
-        def budgetBody = JsonPath.parse(budgetResponse.then()
-                .assertThat().statusCode(200)
-                .assertThat().contentType("application/vnd.mdg+json")
-                .extract().asString())
-        def initialAmount = budgetBody.read("data.attributes.outgoing_amount.actual", BigDecimal.class)
+        BigDecimal initialAmount = when().get(API.Budget, "20170401")
+                .then().spec(readSpec())
+                .extract().path("data.attributes.outgoing_amount.actual")
 
         when: "New transaction is submitted"
-        tFixture.makeTransaction(transaction)
+        def txId = TransactionFixture.create(transaction)
 
         then: "Actual amount should change"
-        def response = given()
-                .contentType("application/vnd.mdg+json").
-                when()
-                .get(API.Budget, "20170401")
-        def body = JsonPath.parse(response.then()
-                .assertThat().statusCode(200)
-                .assertThat().contentType("application/vnd.mdg+json")
-                .extract().asString())
-        def actualAmount = body.read("data.attributes.outgoing_amount.actual", BigDecimal.class)
+        BigDecimal actualAmount = when().get(API.Budget, "20170401")
+                .then().spec(readSpec())
+                .extract().path("data.attributes.outgoing_amount.actual")
 
-        def expected = rateConverter.applyRate(50, rateConverter.getCurrencyForAccount(accounts["asset"]))
+        BigDecimal expected = rateConverter.applyRate(50, rateConverter.getCurrencyForAccount(assetId))
 
-        assertThat(actualAmount.subtract(initialAmount), equalTo(new BigDecimal(expected)))
+        assertThat(actualAmount.subtract(initialAmount).toBigInteger(), equalTo(expected.toBigInteger()))
 
+        when().delete(API.Transaction, txId)
     }
 
     def 'Budget actual amount should change when transaction is removed'() {
         given: 'An new budget with some transaction'
-        def txId = tFixture.makeTransaction(transaction)
+        def txId = TransactionFixture.create(transaction)
 
-        def budgetResponse = given()
-                .contentType("application/vnd.mdg+json").
-                when()
-                .get(API.Budget, "20170401")
-        def budgetBody = JsonPath.parse(budgetResponse.then()
-                .assertThat().statusCode(200)
-                .assertThat().contentType("application/vnd.mdg+json")
-                .extract().asString())
-        def initialAmount = budgetBody.read("data.attributes.outgoing_amount.actual", BigDecimal.class)
+        BigDecimal initialAmount = when().get(API.Budget, "20170401")
+                .then().spec(readSpec())
+                .extract().path("data.attributes.outgoing_amount.actual")
 
         when: "Transaction is removed"
         when().delete(API.Transaction, txId)
-        .then().assertThat().statusCode(204)
+        .then().statusCode(204)
 
 
         then: "Actual amount should change"
-        def response = given()
-                .contentType("application/vnd.mdg+json").
-                when()
-                .get(API.Budget, "20170401")
-        def body = JsonPath.parse(response.then()
-                .assertThat().statusCode(200)
-                .assertThat().contentType("application/vnd.mdg+json")
-                .extract().asString())
-        def actualAmount = body.read("data.attributes.outgoing_amount.actual", BigDecimal.class)
+        BigDecimal actualAmount = when().get(API.Budget, "20170401")
+                .then().spec(readSpec())
+                .extract().path("data.attributes.outgoing_amount.actual")
 
-        def expected = rateConverter.applyRate(-50, rateConverter.getCurrencyForAccount(accounts["asset"]))
+        BigDecimal expected = rateConverter.applyRate(-50, rateConverter.getCurrencyForAccount(assetId))
 
-        assertThat(actualAmount.subtract(initialAmount), equalTo(new BigDecimal(expected)))
+        assertThat(actualAmount.subtract(initialAmount).toBigInteger(), equalTo(expected.toBigInteger()))
     }
 
     def 'Budget actual amount should change when transaction is edited'() {
         given: 'An new budget with some transaction'
-        def txId = tFixture.makeTransaction(transaction)
-        def budgetResponse = given()
-                .contentType("application/vnd.mdg+json").
-                when()
-                .get(API.Budget, "20170401")
-        def budgetBody = JsonPath.parse(budgetResponse.then()
-                .assertThat().statusCode(200)
-                .assertThat().contentType("application/vnd.mdg+json")
-                .extract().asString())
-        def initialAmount = budgetBody.read("data.attributes.outgoing_amount.actual", BigDecimal.class)
+        def txId = TransactionFixture.create(transaction)
+
+        BigDecimal initialAmount = when().get(API.Budget, "20170401")
+                .then().spec(readSpec())
+                .extract().path("data.attributes.outgoing_amount.actual")
 
         when: "Transaction is edited"
         def newTx = transaction.clone()
         newTx.data.attributes.operations[1].amount = 100
         newTx.data.attributes.operations[2].amount = 50
-        given()
-                .contentType("application/vnd.mdg+json").
-                when()
-                .request().body(JsonOutput.toJson(newTx))
-                .put(API.Transaction, txId)
-
+        given().body(JsonOutput.toJson(newTx))
+                .when().put(API.Transaction, txId)
+                .then().spec(modifySpec())
 
         then: "Actual amount should change"
-        def response = given()
-                .contentType("application/vnd.mdg+json").
-                when()
-                .get(API.Budget, "20170401")
-        def body = JsonPath.parse(response.then()
-                .assertThat().statusCode(200)
-                .assertThat().contentType("application/vnd.mdg+json")
-                .extract().asString())
-        def actualAmount = body.read("data.attributes.outgoing_amount.actual", BigDecimal.class)
+        BigDecimal actualAmount = when().get(API.Budget, "20170401")
+                .then().spec(readSpec())
+                .extract().path("data.attributes.outgoing_amount.actual")
 
-        def expected = rateConverter.applyRate(50, rateConverter.getCurrencyForAccount(accounts["asset"]))
+        BigDecimal expected = rateConverter.applyRate(50, rateConverter.getCurrencyForAccount(assetId))
 
-        assertThat(actualAmount.subtract(initialAmount), equalTo(new BigDecimal(expected)))
+        assertThat(actualAmount.subtract(initialAmount).toBigInteger(), equalTo(expected.toBigInteger()))
     }
 }

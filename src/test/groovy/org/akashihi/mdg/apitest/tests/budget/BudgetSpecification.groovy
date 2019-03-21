@@ -1,94 +1,56 @@
 package org.akashihi.mdg.apitest.tests.budget
 
-import com.jayway.jsonpath.JsonPath
 import groovy.json.JsonOutput
+import org.akashihi.mdg.apitest.fixtures.BudgetFixture
 import spock.lang.Specification
 import org.akashihi.mdg.apitest.API
 
 import static io.restassured.RestAssured.given
+import static io.restassured.RestAssured.when
+import static org.akashihi.mdg.apitest.apiConnectionBase.createSpec
+import static org.akashihi.mdg.apitest.apiConnectionBase.readSpec
 import static org.akashihi.mdg.apitest.apiConnectionBase.setupAPI
 import static org.hamcrest.Matchers.*
-import static org.junit.Assert.assertThat
 
 class BudgetSpecification extends Specification {
     def setupSpec() {
-        setupAPI();
+        setupAPI()
+    }
+
+    def cleanupSpec() {
+        BudgetFixture.remove("20170204")
+        BudgetFixture.remove("20170207")
     }
 
     def "User creates new budget"() {
-        given: "Brand new budget"
-
         when: "New budget is submitted to the system"
-        def budget = [
-                "data": [
-                        "type"      : "buget",
-                        "attributes": [
-                                "term_beginning" : '2017-02-04',
-                                "term_end" : '2017-02-06',
-                        ]
-                ]
-        ]
-        def response =given()
-                .contentType("application/vnd.mdg+json").
-                when()
-                .request().body(JsonOutput.toJson(budget))
-                .post(API.Budgets)
-        def body = JsonPath.parse(response.
-                then()
-                .assertThat().statusCode(201)
-                .assertThat().contentType("application/vnd.mdg+json")
-                .assertThat().header("Location", containsString("/api/budget/20170204"))
-                .extract().asString())
-
-        assertThat(body.read("data.type"), equalTo("budget"))
-        assertThat(body.read("data.attributes.term_beginning"), equalTo("2017-02-04"))
-        assertThat(body.read("data.attributes.term_end"), equalTo("2017-02-06"))
-        def bId =response.then().extract().path("data.id")
+        def budget = BudgetFixture.budget("2017-02-04", "2017-02-06")
+        def bId =given().body(JsonOutput.toJson(budget))
+                .when().post(API.Budgets)
+                .then().spec(createSpec("/api/budget"))
+                .body("data.type", equalTo("budget"))
+                .body("data.attributes.term_beginning", equalTo("2017-02-04"))
+                .body("data.attributes.term_end", equalTo("2017-02-06"))
+                .extract().path("data.id")
 
         then: "Budget appears on budget list"
-        def listResponse = given()
-                .contentType("application/vnd.mdg+json").
-                when()
-                .get(API.Budgets)
-        def listBody =  JsonPath.parse(listResponse.then()
-                .assertThat().statusCode(200)
-                .assertThat().contentType("application/vnd.mdg+json")
-                .extract().asString())
-        assertThat(listBody.read("data", List.class).size(), is(not(0)))
-        assertThat(listBody.read("data[?(@.id == ${bId})].type", List.class).first(), equalTo("budget"))
-        assertThat(listBody.read("data[?(@.id == ${bId})].attributes.term_beginning", List.class).first(), equalTo("2017-02-04"))
-        assertThat(listBody.read("data[?(@.id == ${bId})].attributes.term_end", List.class).first(), equalTo("2017-02-06"))
+        when().get(API.Budgets)
+                .then().spec(readSpec())
+                .body("data.find {it.id==${bId}}.type", equalTo("budget"))
+                .body("data.find {it.id==${bId}}.attributes.term_beginning", equalTo("2017-02-04"))
+                .body("data.find {it.id==${bId}}.attributes.term_end", equalTo("2017-02-06"))
     }
 
     def "User checks budget data"() {
         given: "Brand new budget"
-        def budget = [
-                "data": [
-                        "type"      : "budget",
-                        "attributes": [
-                                "term_beginning" : '2017-02-07',
-                                "term_end" : '2017-02-09',
-                        ]
-                ]
-        ]
-
-        given()
-                .contentType("application/vnd.mdg+json").
-                when()
-                .request().body(JsonOutput.toJson(budget))
-                .post(API.Budgets)
+        BudgetFixture.create(BudgetFixture.budget('2017-02-07', '2017-02-09'))
 
         when: "Budget is requested by specifying it's data"
-        def response = given()
-                .contentType("application/vnd.mdg+json").
-                when()
-                .get(API.Budget, "20170208")
+        def response = when().get(API.Budget, "20170208")
 
 
         then: "Budget data should be returned"
-        response.then()
-                .assertThat().statusCode(200)
-                .assertThat().contentType("application/vnd.mdg+json")
+        response.then().spec(readSpec())
                 .body("data.type", equalTo("budget"))
                 .body("data.attributes.term_beginning", equalTo("2017-02-07"))
                 .body("data.attributes.term_end", equalTo("2017-02-09"))
@@ -96,41 +58,16 @@ class BudgetSpecification extends Specification {
 
     def "User deletes budget"() {
         given: "Brand new febBudget"
-        def budget = [
-                "data": [
-                        "type"      : "buget",
-                        "attributes": [
-                                "term_beginning" : '2017-02-10',
-                                "term_end" : '2017-02-12',
-                        ]
-                ]
-        ]
-
-        given()
-                .contentType("application/vnd.mdg+json").
-                when()
-                .request().body(JsonOutput.toJson(budget))
-                .post(API.Budgets)
+        BudgetFixture.create(BudgetFixture.budget('2017-02-10', '2017-02-12'))
 
         when: "Budget is deleted"
-        given()
-                .contentType("application/vnd.mdg+json").
-                when()
-                .delete(API.Budget, "20170210")
-                .then()
-                .assertThat().statusCode(204)
+        when().delete(API.Budget, "20170210")
+                .then().statusCode(204)
 
 
         then: "it should disappear from budget list"
-        def response = given()
-                .contentType("application/vnd.mdg+json").
-                when()
-                .get(API.Budgets)
-        def body = JsonPath.parse(response.then()
-                .assertThat().statusCode(200)
-                .assertThat().contentType("application/vnd.mdg+json")
-                .extract().asString())
-
-        assertThat(body.read("data[?(@.id == '20170210')]", List.class), empty())
+        when().get(API.Budgets)
+                .then().spec(readSpec())
+                .body("data.find {it.id==20170210}", nullValue())
     }
 }

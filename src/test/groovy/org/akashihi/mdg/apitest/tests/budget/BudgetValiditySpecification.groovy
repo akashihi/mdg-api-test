@@ -4,156 +4,36 @@ import groovy.json.JsonOutput
 import org.akashihi.mdg.apitest.fixtures.BudgetFixture
 import spock.lang.Specification
 import org.akashihi.mdg.apitest.API
+import spock.lang.Unroll
 
 import static io.restassured.RestAssured.given
+import static org.akashihi.mdg.apitest.apiConnectionBase.errorSpec
 import static org.akashihi.mdg.apitest.apiConnectionBase.setupAPI
-import static org.hamcrest.Matchers.equalTo
 
 class BudgetValiditySpecification extends Specification {
-    static BudgetFixture fixture = new BudgetFixture();
-
     def setupSpec() {
-        setupAPI();
-        fixture.makeBudget(fixture.febBudget);
+        setupAPI()
+        BudgetFixture.create(BudgetFixture.budget('2017-02-13', '2017-02-28'))
     }
 
-    def "Budget validity period is less then two days"() {
-        given: "Very short febBudget"
-        def budget = [
-                "data": [
-                        "type"      : "buget",
-                        "attributes": [
-                                "term_beginning" : '2017-02-09',
-                                "term_end" : '2017-02-09',
-                        ]
-                ]
-        ]
-
-
-        when: "Budget is submitted to the system"
-        def response = given()
-                .contentType("application/vnd.mdg+json").
-                when()
-                .request().body(JsonOutput.toJson(budget))
-                .post(API.Budgets)
-
-
-        then: "It should not be accepted"
-        response.then()
-            .assertThat().statusCode(412)
-                .assertThat().contentType("application/vnd.mdg+json")
-                .body("errors[0].code", equalTo("BUDGET_SHORT_RANGE"))
+    def cleanupSpec() {
+        BudgetFixture.remove('20170213')
     }
 
-    def "Budget should become effective before it expires"() {
-        given: "Budget the expires before it's start time"
-        def budget = [
-                "data": [
-                        "type"      : "buget",
-                        "attributes": [
-                                "term_beginning" : '2017-02-10',
-                                "term_end" : '2017-02-09',
-                        ]
-                ]
-        ]
+    @Unroll
+    def "Budget validity period is #NAME"() {
+        expect:
+        def budget = BudgetFixture.budget(beginning, end)
+        given().body(JsonOutput.toJson(budget))
+                .when().post(API.Budgets)
+                .then().spec(errorSpec(412, msg))
 
-
-        when: "Budget is submitted to the system"
-        def response = given()
-                .contentType("application/vnd.mdg+json").
-                when()
-                .request().body(JsonOutput.toJson(budget))
-                .post(API.Budgets)
-
-
-        then: "It should not be accepted"
-        response.then()
-                .assertThat().statusCode(412)
-                .assertThat().contentType("application/vnd.mdg+json")
-                .body("errors[0].code", equalTo("BUDGET_INVALID_TERM"))
-    }
-
-    def "Budget should not be inside other budget validity period"() {
-        given: "Two overlapping budgets"
-        def overlap = [
-                "data": [
-                        "type"      : "budget",
-                        "attributes": [
-                                "term_beginning" : '2017-02-14',
-                                "term_end" : '2017-02-17',
-                        ]
-                ]
-        ]
-
-
-        when: "Budget is submitted to the system"
-        def response = given()
-                .contentType("application/vnd.mdg+json").
-                when()
-                .request().body(JsonOutput.toJson(overlap))
-                .post(API.Budgets)
-
-
-        then: "It should not be accepted"
-        response.then()
-                .assertThat().statusCode(412)
-                .assertThat().contentType("application/vnd.mdg+json")
-                .body("errors[0].code", equalTo("BUDGET_OVERLAPPING"))
-    }
-
-    def "Budget term beginning should not be inside other budget validity period"() {
-        given: "Two overlapping budgets"
-        def overlap = [
-                "data": [
-                        "type"      : "bubget",
-                        "attributes": [
-                                "term_beginning" : '2017-02-14',
-                                "term_end" : '2017-03-14',
-                        ]
-                ]
-        ]
-
-
-        when: "Budget is submitted to the system"
-        def response = given()
-                .contentType("application/vnd.mdg+json").
-                when()
-                .request().body(JsonOutput.toJson(overlap))
-                .post(API.Budgets)
-
-
-        then: "It should not be accepted"
-        response.then()
-                .assertThat().statusCode(412)
-                .assertThat().contentType("application/vnd.mdg+json")
-                .body("errors[0].code", equalTo("BUDGET_OVERLAPPING"))
-    }
-
-    def "Budget term end should not be inside other budget validity period"() {
-        given: "Two overlapping budgets"
-        def overlap = [
-                "data": [
-                        "type"      : "budget",
-                        "attributes": [
-                                "term_beginning" : '2017-01-14',
-                                "term_end" : '2017-02-14',
-                        ]
-                ]
-        ]
-
-
-        when: "Budget is submitted to the system"
-        def response = given()
-                .contentType("application/vnd.mdg+json").
-                when()
-                .request().body(JsonOutput.toJson(overlap))
-                .post(API.Budgets)
-
-
-        then: "It should not be accepted"
-        response.then()
-                .assertThat().statusCode(412)
-                .assertThat().contentType("application/vnd.mdg+json")
-                .body("errors[0].code", equalTo("BUDGET_OVERLAPPING"))
+        where:
+        NAME                    | beginning    | end          | msg
+        "less then two days"    | '2017-02-09' | '2017-02-09' | "BUDGET_SHORT_RANGE"
+        "not inverted"          | '2017-02-10' | '2017-02-09' | "BUDGET_INVALID_TERM"
+        "not fully overlapping" | '2017-02-14' | '2017-02-17' | "BUDGET_OVERLAPPING"
+        "not start overlapping" | '2017-02-14' | '2017-03-14' | "BUDGET_OVERLAPPING"
+        "not end overlapping"   | '2017-01-14' | '2017-02-14' | "BUDGET_OVERLAPPING"
     }
 }

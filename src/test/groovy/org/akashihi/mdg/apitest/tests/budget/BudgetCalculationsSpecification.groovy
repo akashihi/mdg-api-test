@@ -2,67 +2,57 @@ package org.akashihi.mdg.apitest.tests.budget
 
 import com.jayway.jsonpath.JsonPath
 import groovy.json.JsonOutput
+import org.akashihi.mdg.apitest.API
+import org.akashihi.mdg.apitest.fixtures.AccountFixture
 import org.akashihi.mdg.apitest.fixtures.BudgetFixture
-import org.akashihi.mdg.apitest.fixtures.TransactionFixture
 import org.akashihi.mdg.apitest.util.RateConversion
 import spock.lang.Specification
-import org.akashihi.mdg.apitest.API
 
 import static io.restassured.RestAssured.given
+import static io.restassured.RestAssured.when
+import static org.akashihi.mdg.apitest.apiConnectionBase.modifySpec
+import static org.akashihi.mdg.apitest.apiConnectionBase.readSpec
 import static org.akashihi.mdg.apitest.apiConnectionBase.setupAPI
-import static org.hamcrest.Matchers.closeTo
-import static org.hamcrest.Matchers.equalTo
-import static org.hamcrest.Matchers.is
-import static org.hamcrest.Matchers.is
-import static org.hamcrest.Matchers.is
-import static org.hamcrest.Matchers.is
+import static org.hamcrest.Matchers.*
 import static org.junit.Assert.assertThat
 
 class BudgetCalculationsSpecification extends Specification {
 
-    static BudgetFixture bFixture = new BudgetFixture();
-    static TransactionFixture tFixture = new TransactionFixture();
-    static def accounts
+    static def incomeId
+    static def assetId
+    static def expenseId
     static def rateConverter
 
 
     def setupSpec() {
         setupAPI()
 
-        rateConverter = new RateConversion();
+        rateConverter = new RateConversion()
 
-        accounts = tFixture.prepareAccounts()
-        bFixture.makeBudget(bFixture.aprBudget)
+        incomeId = AccountFixture.create(AccountFixture.incomeAccount())
+        assetId = AccountFixture.create(AccountFixture.assetAccount())
+        expenseId = AccountFixture.create(AccountFixture.expenseAccount())
+
+        BudgetFixture.create(BudgetFixture.budget('2017-04-01', '2017-04-30'))
     }
 
     def cleanupSpec() {
-        bFixture.removeBudget("20170401")
+        BudgetFixture.remove("20170401")
     }
 
 
     def 'Budget incoming amount should be sum of all asset accounts before budget term'() {
         given: 'Sum all transactions before budget'
-        def acountResponse = given()
-                .contentType("application/vnd.mdg+json").
-                when()
-                .get(API.Accounts)
-        def accountBody = JsonPath.parse(acountResponse.then()
-                .assertThat().statusCode(200)
-                .assertThat().contentType("application/vnd.mdg+json")
-                .extract().asString())
-        def assetAccountIds = accountBody.read("data[?(@.attributes.account_type == 'asset')].id", List.class)
+        def assetAccountIds = given().when().get(API.Accounts)
+                .then().spec(readSpec())
+                .extract().path("data.find {it.attributes.account_type == 'asset'}.id")
 
-        def txResponse = given()
+        def ops = given()
                 .queryParam("notLater", '2017-04-01T00:00:00')
-                .contentType("application/vnd.mdg+json").
-                when()
-                .get(API.Transactions)
+                .when().get(API.Transactions)
+                .then().spec(readSpec())
+                .extract().path("data.findAll().attributes.operations")
 
-        def txBody = JsonPath.parse(txResponse.then()
-                .assertThat().statusCode(200)
-                .assertThat().contentType("application/vnd.mdg+json")
-                .extract().asString())
-        def ops = txBody.read("data[*].attributes.operations", List.class)
         def incomingAmount = BigDecimal.ZERO
         ops.each{ x ->
             x.each { op ->
@@ -75,91 +65,52 @@ class BudgetCalculationsSpecification extends Specification {
         }
 
         when: 'A new budget is created and retrieved'
-        def response = given()
-                .contentType("application/vnd.mdg+json").
-                when()
-                .get(API.Budget, "20170401")
+        BigDecimal actualAmount = given().when().get(API.Budget, "20170401")
+                .then().spec(readSpec())
+                .extract().path("data.attributes.incoming_amount")
 
 
         then: "Budget incoming amount should match sum of asset transactions"
-        def body = JsonPath.parse(response.then()
-                .assertThat().statusCode(200)
-                .assertThat().contentType("application/vnd.mdg+json")
-                .body("data.type", equalTo("budget"))
-                .extract().asString())
-        def actualAmount = body.read("data.attributes.incoming_amount", BigDecimal.class)
-
         assertThat(actualAmount.compareTo(incomingAmount), is(0))
     }
 
     def 'Budget expected amount should be sum of all asset accounts after budget term'() {
         given: 'Some budget'
-        def budgetResponse = given()
-                .contentType("application/vnd.mdg+json").
-                when()
-                .get(API.Budget, "20170401")
-        def budgetBody = JsonPath.parse(budgetResponse.then()
-                .assertThat().statusCode(200)
-                .assertThat().contentType("application/vnd.mdg+json")
-                .extract().asString())
-        def incomingAmount = budgetBody.read("data.attributes.incoming_amount")
-        def expectedAmount = budgetBody.read("data.attributes.outgoing_amount.expected")
+        def budgetBody = given().when().get(API.Budget, "20170401")
+                .then().spec(readSpec())
+        BigDecimal incomingAmount = budgetBody.extract().path("data.attributes.incoming_amount")
+        BigDecimal expectedAmount = budgetBody.extract().path("data.attributes.outgoing_amount.expected")
 
         when: "List of budget entries is summarized"
-        def listResponse = given()
-                .contentType("application/vnd.mdg+json").
-                when()
-                .get(API.BudgetEntries,"20170401")
+        def amounts = when().get(API.BudgetEntries,"20170401")
+                .then().spec(readSpec())
+                .extract().path("data.findAll().attributes.expected_amount")
 
-        def listBody =  JsonPath.parse(listResponse.then()
-                .assertThat().statusCode(200)
-                .assertThat().contentType("application/vnd.mdg+json")
-                .extract().asString())
-
-        def amounts = listBody.read("data[*].attributes.expected_amount", List.class)
         def calculatedAmount = BigDecimal.ZERO
         amounts.each{ x ->
             calculatedAmount = calculatedAmount.add(new BigDecimal(calculatedAmount))
         }
 
         then: "Budget expected amount and calculated amount should match"
-        assertThat(new BigDecimal(incomingAmount).add(calculatedAmount), equalTo(new BigDecimal(expectedAmount)))
+        assertThat(incomingAmount.add(calculatedAmount), equalTo(expectedAmount))
     }
 
     def 'Budget expected should change when budget entry is modified'() {
         given: 'Some budget'
-        def budgetResponse = given()
-                .contentType("application/vnd.mdg+json").
-                when()
-                .get(API.Budget, "20170401")
-        def budgetBody = JsonPath.parse(budgetResponse.then()
-                .assertThat().statusCode(200)
-                .assertThat().contentType("application/vnd.mdg+json")
-                .extract().asString())
-        def expectedAmount = budgetBody.read("data.attributes.outgoing_amount.expected")
+        BigDecimal expectedAmount = when().get(API.Budget, "20170401")
+                .then().spec(readSpec())
+                .extract().path("data.attributes.outgoing_amount.expected")
 
         when: "Budget entry is modified"
-        def listResponse = given()
-                .contentType("application/vnd.mdg+json").
-                when()
-                .get(API.BudgetEntries,"20170401")
-        def listBody =  JsonPath.parse(listResponse.then()
-                .assertThat().statusCode(200)
-                .assertThat().contentType("application/vnd.mdg+json")
-                .extract().asString())
-        def entryId = listBody.read("data.*.id", List.class).first()
-        def entryResponse = given()
-                .contentType("application/vnd.mdg+json").
-                when()
-                .get(API.BudgetEntry,"20170401", entryId)
+        def entryIds = when().get(API.BudgetEntries,"20170401")
+                .then().spec(readSpec())
+                .extract().path("data.findAll().id")
+        def entryBody = when().get(API.BudgetEntry,"20170401", entryIds.first())
+                .then().spec(readSpec())
 
-        def entryBody = JsonPath.parse(entryResponse.then()
-                .assertThat().statusCode(200)
-                .assertThat().contentType("application/vnd.mdg+json")
-                .extract().asString())
-        def entryAmount = entryBody.read("data.attributes.expected_amount")
-        def entryAccount = entryBody.read("data.attributes.account_id")
-        def newAmount = new BigDecimal(entryAmount).add(9000)
+        BigDecimal entryAmount = entryBody.extract().path("data.attributes.expected_amount")
+        BigDecimal entryAccount = entryBody.extract().path("data.attributes.account_id")
+        def newAmount = new BigDecimal(entryAmount).add(new BigDecimal(9000))
 
 
         def newEntry = [
@@ -171,27 +122,18 @@ class BudgetCalculationsSpecification extends Specification {
                         ]
                 ]
         ]
-        given()
-                .contentType("application/vnd.mdg+json")
-                .when()
-                .request().body(JsonOutput.toJson(newEntry))
-                .put(API.BudgetEntry,"20170301", entryId).
-                then()
-                .assertThat().statusCode(202)
+        given().body(JsonOutput.toJson(newEntry))
+                .when().put(API.BudgetEntry,"20170301", entryIds.first())
+                .then().spec(modifySpec())
+
 
         then: "Budget expected amount should differ by 9000"
-        def updatedResponse = given()
-                .contentType("application/vnd.mdg+json").
-                when()
-                .get(API.Budget, "20170401")
-        def updatedBody = JsonPath.parse(updatedResponse.then()
-                .assertThat().statusCode(200)
-                .assertThat().contentType("application/vnd.mdg+json")
-                .extract().asString())
-        def updatedAmount = updatedBody.read("data.attributes.outgoing_amount.expected")
+        BigDecimal updatedAmount = when().get(API.Budget, "20170401")
+                .then().spec(readSpec())
+                .extract().path("data.attributes.outgoing_amount.expected")
 
-        def expectedDifference = rateConverter.applyRate(9000, rateConverter.getCurrencyForAccount(entryAccount))
+        BigDecimal expectedDifference = rateConverter.applyRate(9000, rateConverter.getCurrencyForAccount(entryAccount))
 
-        assertThat(new BigDecimal(updatedAmount).subtract(new BigDecimal(expectedAmount)).abs(), closeTo(new BigDecimal(expectedDifference), 0.001))
+        assertThat(updatedAmount.subtract(expectedAmount).abs(), closeTo(expectedDifference, 0.001))
     }
 }

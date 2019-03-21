@@ -4,28 +4,10 @@ import groovy.json.JsonOutput
 import org.akashihi.mdg.apitest.API
 
 import static io.restassured.RestAssured.given
+import static io.restassured.RestAssured.when
+import static org.akashihi.mdg.apitest.apiConnectionBase.createSpec
 
 class BudgetFixture {
-    def incomeStateBudget = [
-            "data": [
-                    "type"      : "budget",
-                    "attributes": [
-                            "term_beginning" : '2016-12-01',
-                            "term_end" : '2016-12-31',
-                    ]
-            ]
-    ]
-
-    def febBudget = [
-            "data": [
-                    "type"      : "budget",
-                    "attributes": [
-                            "term_beginning" : '2017-02-13',
-                            "term_end" : '2017-02-28',
-                    ]
-            ]
-    ]
-
     def marBudget = [
             "data": [
                     "type"      : "budget",
@@ -61,5 +43,29 @@ class BudgetFixture {
                 .delete(API.Budget, id)
                 .then()
                 .assertThat().statusCode(204)
+    }
+
+    static def budget(b, e) {
+        return [
+                "data": [
+                        "type"      : "budget",
+                        "attributes": [
+                                "term_beginning" : b,
+                                "term_end" : e,
+                        ]
+                ]
+        ]
+    }
+
+    static def create(budget) {
+        given().body(JsonOutput.toJson(budget))
+                .when().post(API.Budgets)
+                .then().spec(createSpec("/api/budget"))
+                .extract().path("data.id")
+    }
+
+    static def remove(id) {
+                when().delete(API.Budget, id)
+                .then().statusCode(204)
     }
 }
