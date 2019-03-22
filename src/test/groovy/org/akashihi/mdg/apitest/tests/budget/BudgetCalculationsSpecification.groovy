@@ -1,6 +1,5 @@
 package org.akashihi.mdg.apitest.tests.budget
 
-import com.jayway.jsonpath.JsonPath
 import groovy.json.JsonOutput
 import org.akashihi.mdg.apitest.API
 import org.akashihi.mdg.apitest.fixtures.AccountFixture
