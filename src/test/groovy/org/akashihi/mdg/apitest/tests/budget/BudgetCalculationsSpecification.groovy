@@ -44,7 +44,7 @@ class BudgetCalculationsSpecification extends Specification {
         given: 'Sum all transactions before budget'
         def assetAccountIds = given().when().get(API.Accounts)
                 .then().spec(readSpec())
-                .extract().path("data.find {it.attributes.account_type == 'asset'}.id")
+                .extract().path("data.findAll() {it.attributes.account_type == 'asset'}.id")
 
         def ops = given()
                 .queryParam("notLater", '2017-04-01T00:00:00')
