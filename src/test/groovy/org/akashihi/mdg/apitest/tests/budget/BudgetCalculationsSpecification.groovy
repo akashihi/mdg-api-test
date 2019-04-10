@@ -7,6 +7,8 @@ import org.akashihi.mdg.apitest.fixtures.BudgetFixture
 import org.akashihi.mdg.apitest.util.RateConversion
 import spock.lang.Specification
 
+import java.math.RoundingMode
+
 import static io.restassured.RestAssured.given
 import static io.restassured.RestAssured.when
 import static org.akashihi.mdg.apitest.apiConnectionBase.modifySpec
@@ -70,7 +72,7 @@ class BudgetCalculationsSpecification extends Specification {
 
 
         then: "Budget incoming amount should match sum of asset transactions"
-        assertThat(actualAmount.compareTo(incomingAmount), is(0))
+        assertThat(actualAmount.setScale(2, RoundingMode.HALF_UP).compareTo(incomingAmount.setScale(2, RoundingMode.HALF_UP)), is(0))
     }
 
     def 'Budget expected amount should be sum of all asset accounts after budget term'() {
