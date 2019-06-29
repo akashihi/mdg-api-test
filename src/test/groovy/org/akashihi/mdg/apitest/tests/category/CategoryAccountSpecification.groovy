@@ -12,8 +12,10 @@ import static org.akashihi.mdg.apitest.apiConnectionBase.errorSpec
 import static org.akashihi.mdg.apitest.apiConnectionBase.modifySpec
 import static org.akashihi.mdg.apitest.apiConnectionBase.readSpec
 import static org.akashihi.mdg.apitest.apiConnectionBase.setupAPI
+import static org.hamcrest.Matchers.empty
 import static org.hamcrest.Matchers.equalTo
 import static org.hamcrest.Matchers.isEmptyOrNullString
+import static org.hamcrest.Matchers.not
 
 class CategoryAccountSpecification extends Specification {
     def setupSpec() {
@@ -31,6 +33,21 @@ class CategoryAccountSpecification extends Specification {
         when().get(API.Account, accountId)
             .then().spec(readSpec())
             .body("data.attributes.category_id", equalTo(categoryId))
+    }
+
+    def 'Asset account have default category'() {
+        given: 'Current category'
+        def categoryId = when().get(API.Categories)
+                .then().spec(readSpec())
+                .extract().path("data.find {it.name=='Current'}.id")
+
+        when: 'Asset account is created without category'
+        def accountId = AccountFixture.create(AccountFixture.assetAccount())
+
+        then: "Account should be linked to the Current category"
+        when().get(API.Account, accountId)
+                .then().spec(readSpec())
+                .body("data.attributes.category_id", equalTo(categoryId))
     }
 
     def 'Account is assigned to the category'() {
