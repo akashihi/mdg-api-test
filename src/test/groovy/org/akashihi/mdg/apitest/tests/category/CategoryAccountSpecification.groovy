@@ -39,7 +39,7 @@ class CategoryAccountSpecification extends Specification {
         given: 'Current category'
         def categoryId = when().get(API.Categories)
                 .then().spec(readSpec())
-                .extract().path("data.find {it.name=='Current'}.id")
+                .extract().path("data.find {it.attributes.name=='Current'}.id")
 
         when: 'Asset account is created without category'
         def accountId = AccountFixture.create(AccountFixture.assetAccount())
