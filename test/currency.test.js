@@ -1,6 +1,5 @@
 const pactum = require('pactum');
 const {like, string, expression} = require('pactum-matchers');
-const {describe} = require("mocha/lib/cli/run");
 
 it('Load list of currencies', async () => {
     await pactum.spec('read')
