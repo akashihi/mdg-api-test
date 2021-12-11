@@ -19,9 +19,8 @@ it('Request non-existent currency', async () => {
     /* By definition all currency ids
      * are between 100 and 999 inclusive
      */
-    await pactum.spec()
-        .get('/currency/1')
-        .use('expect error', {status_code: 404, error_code: 'CURRENCY_NOT_FOUND'});
+    await pactum.spec('expect error', {status_code: 404, error_code: 'CURRENCY_NOT_FOUND'})
+        .get('/currency/1');
 });
 
 it('Enable/Disable currency', async () => {
