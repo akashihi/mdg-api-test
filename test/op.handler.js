@@ -6,6 +6,11 @@ addSpecHandler('expect success', (ctx) => {
     spec.expectHeader('content-type', 'application/vnd.mdg+json')
 });
 
+addSpecHandler('create', (ctx) => {
+    const { spec } = ctx;
+    spec.use("expect success", 201);
+});
+
 addSpecHandler('read', (ctx) => {
     const { spec } = ctx;
     spec.use("expect success", 200);
@@ -14,4 +19,9 @@ addSpecHandler('read', (ctx) => {
 addSpecHandler('modification', (ctx) => {
     const { spec } = ctx;
     spec.use("expect success", 202);
+});
+
+addSpecHandler('delete', (ctx) => {
+    const { spec } = ctx;
+    spec.expectStatus(204);
 });

@@ -1,6 +1,6 @@
 const pactum = require('pactum');
 var itParam = require('mocha-param');
-const {any, like} = require("pactum-matchers");
+const {any} = require("pactum-matchers");
 const stash = pactum.stash;
 var itParam = require('mocha-param');
 
