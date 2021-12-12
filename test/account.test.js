@@ -90,8 +90,6 @@ describe('Account operations', () => {
             .get('/account')
             .withQueryParams({"filter": "{\"hidden\":false}"})
             .expectJsonMatch('data[*].id', expression('$S{AccountID}', '!$V.includes($S{AccountID})'))
-
-        await e2e.cleanup()
     })
 
     it('Specific filtering ignores hidden flag', async () => {
