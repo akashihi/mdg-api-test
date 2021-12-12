@@ -60,6 +60,46 @@ describe('Account operations', () => {
             .get("/account/{id}")
             .withPathParams('id', '$S{AccountID}')
             .expectJson("data.attributes.name", "Monthly rent")
+    })
+
+    it('Hide account', async () => {
+        await e2e.step('Hide account')
+            .spec('delete')
+            .delete('/account/{id}')
+            .withPathParams('id', '$S{AccountID}');
+    })
+
+    it('Hidden account is in non-filtered account lists', async () => {
+        await e2e.step('Hidden account is in non-filtered account lists')
+            .spec('read')
+            .get('/account')
+            .expectJsonMatch('data[*].id', expression('$S{AccountID}', '$V.includes($S{AccountID})'))
+    })
+
+    it('Hidden account is in hidden accounts list', async () => {
+        await e2e.step('Hidden account is in hidden accounts list')
+            .spec('read')
+            .get('/account')
+            .withQueryParams({"filter": "{\"hidden\":true}"})
+            .expectJsonMatch('data[*].id', expression('$S{AccountID}', '$V.includes($S{AccountID})'))
+    })
+
+    it('Hidden account is not in active accounts list', async () => {
+        await e2e.step('Hidden account is not in active accounts list')
+            .spec('read')
+            .get('/account')
+            .withQueryParams({"filter": "{\"hidden\":false}"})
+            .expectJsonMatch('data[*].id', expression('$S{AccountID}', '!$V.includes($S{AccountID})'))
+
+        await e2e.cleanup()
+    })
+
+    it('Specific filtering ignores hidden flag', async () => {
+        await e2e.step('Specific filtering ignores hidden flag')
+            .spec('read')
+            .get('/account')
+            .withQueryParams({"filter": "{\"name\":\"Monthly rent\"}"})
+            .expectJsonMatch('data[*].id', expression('$S{AccountID}', '$V.includes($S{AccountID})'))
 
         await e2e.cleanup()
     })
