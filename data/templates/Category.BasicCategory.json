@@ -1,0 +1,12 @@
+{
+  "Category:BasicCategory": {
+    "data": {
+      "attributes": {
+        "account_type": "expense",
+        "name": "Bonuses",
+        "priority": 1
+      },
+      "type": "category"
+    }
+  }
+}
