@@ -16,7 +16,7 @@ addSpecHandler('read', (ctx) => {
     spec.use("expect success", 200);
 });
 
-addSpecHandler('modification', (ctx) => {
+addSpecHandler('update', (ctx) => {
     const { spec } = ctx;
     spec.use("expect success", 202);
 });

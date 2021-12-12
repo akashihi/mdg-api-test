@@ -15,7 +15,7 @@ pactum.handler.addSpecHandler('Set setting value', (ctx) => {
         }
     })
     spec.expectJson('data.attributes.value', value);
-    spec.use('modification');
+    spec.use('update');
 })
 
 pactum.handler.addSpecHandler('Check setting value', (ctx) => {

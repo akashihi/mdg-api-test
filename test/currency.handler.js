@@ -13,5 +13,5 @@ pactum.handler.addSpecHandler('Modify Currency', (ctx) => {
     spec.put('/currency/{id}')
     spec.withPathParams('id', id);
     spec.withJson(currency)
-    spec.use('modification')
+    spec.use('update')
 })

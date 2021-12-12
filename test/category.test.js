@@ -60,7 +60,7 @@ describe('Category operations', () => {
 
     it('Update category', async () => {
             await e2e.step('Update category')
-                .spec('modification')
+                .spec('update')
                 .put('/category/{id}')
                 .withPathParams('id', '$S{CategoryID}')
                 .withJson({
