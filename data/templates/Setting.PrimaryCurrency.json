@@ -1,0 +1,11 @@
+{
+  "Setting:PrimaryCurrency": {
+    "data": {
+      "attributes": {
+        "value": "978"
+      },
+      "id": "currency.primary",
+      "type": "setting"
+    }
+  }
+}

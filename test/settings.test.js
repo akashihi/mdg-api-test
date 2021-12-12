@@ -1,35 +1,8 @@
 const pactum = require('pactum');
 var itParam = require('mocha-param');
 const {any} = require("pactum-matchers");
-const stash = pactum.stash;
-var itParam = require('mocha-param');
 
 const SETTINGS = ['currency.primary', 'ui.transaction.closedialog', 'ui.language'];
-
-before(() => {
-    stash.addDataTemplate({
-        'Setting:CloseDialog': {
-            data: {
-                type: "setting",
-                id: "ui.transaction.closedialog",
-                attributes: {
-                    value: "true"
-                }
-            }
-        }
-    });
-    stash.addDataTemplate({
-        'Setting:PrimaryCurrency': {
-            data: {
-                type: "setting",
-                id: "currency.primary",
-                attributes: {
-                    value: "978"
-                }
-            }
-        }
-    });
-});
 
 it('All settings are present in the settings list', async () => {
     await pactum.spec('read')
