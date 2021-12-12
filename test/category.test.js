@@ -1,6 +1,5 @@
 const pactum = require('pactum');
 const {int, expression} = require('pactum-matchers');
-const stash = pactum.stash;
 
 describe('Category operations', () => {
     let e2e = pactum.e2e("Category operations")
