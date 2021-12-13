@@ -1,26 +1,15 @@
 const pactum = require('pactum');
 const {int, expression} = require('pactum-matchers');
+const {createAccountForTransaction} = require('./transaction.handler')
 
 describe('Transaction operations', () => {
     let e2e = pactum.e2e("Transaction operations")
 
     it('Create Transaction', async () => {
-        await e2e.step('Prepare income account')
-            .spec('Create Account', {'@DATA:TEMPLATE@': 'Account:Income'})
-            .stores('IncomeAccountID', 'data.id')
+        await createAccountForTransaction(e2e)
 
-        await e2e.step('Prepare asset account')
-            .spec('Create Account', {'@DATA:TEMPLATE@': 'Account:Asset'})
-            .stores('AssetAccountID', 'data.id')
-
-        await e2e.step('Prepare expense account')
-            .spec('Create Account', {'@DATA:TEMPLATE@': 'Account:Expense'})
-            .stores('ExpenseAccountID', 'data.id')
-
-        await e2e.step('Post transaction')
-            .spec('create')
-            .post('/transaction')
-            .withJson({'@DATA:TEMPLATE@': 'Transaction:Rent'})
+        await e2e.step('Create transaction')
+            .spec('Create Transaction', {'@DATA:TEMPLATE@': 'Transaction:Rent'})
             .stores('TransactionID', 'data.id')
             .expectJsonMatch({
                 '@DATA:TEMPLATE@': 'Transaction:Rent',

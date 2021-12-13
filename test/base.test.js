@@ -6,6 +6,7 @@ require('./op.handler');
 require('./currency.handler');
 require('./settings.handler');
 require('./category.handler');
+require('./transaction.handler');
 
 // global hook
 before(() => {
