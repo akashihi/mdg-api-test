@@ -1,6 +1,6 @@
 const pactum = require('pactum');
 const {int, expression} = require('pactum-matchers');
-const {createAccountForTransaction} = require('./transaction.handler')
+const {createAccountForTransaction, checkAccountsBalances} = require('./transaction.handler')
 
 describe('Transaction operations', () => {
     let e2e = pactum.e2e("Transaction operations")
@@ -11,37 +11,40 @@ describe('Transaction operations', () => {
         await e2e.step('Create transaction')
             .spec('Create Transaction', {'@DATA:TEMPLATE@': 'Transaction:Rent'})
             .stores('TransactionID', 'data.id')
-            .expectJsonMatch({
+            .expectJsonLike({
                 '@DATA:TEMPLATE@': 'Transaction:Rent',
                 '@OVERRIDES@': {
                     data: {
-                        id: int()
+                        id: 'typeof $V === "number"'
                     }
                 }
             })
     })
 
-//TODO Backend is too slow on non-paged output
-    /*it('List transactions', async () => {
+    it('List transactions', async () => {
         await e2e.step('List transactions')
             .spec('read')
             .get('/transaction')
             .expectJsonMatch('data[*].id', expression('$S{TransactionID}', '$V.includes($S{TransactionID})'))
-    })*/
+    })
 
     it('Read transaction', async () => {
         await e2e.step('Read transaction')
             .spec('read')
             .get('/transaction/{id}')
             .withPathParams('id', '$S{TransactionID}')
-            .expectJsonMatch({
+            .expectJsonLike({
                 '@DATA:TEMPLATE@': 'Transaction:Rent',
                 '@OVERRIDES@': {
                     data: {
-                        id: int()
+                        id: 'typeof $V === "number"'
                     }
                 }
             })
+    })
+
+    it('Newly created transaction updates accounts balances', async () => {
+        await checkAccountsBalances(e2e, -150, 50, 100)
     })
 
     it('Update transaction', async () => {
@@ -79,17 +82,25 @@ describe('Transaction operations', () => {
             .expectJson("data.attributes.operations[2].amount", 70)
     })
 
+    it('Updated transaction updates accounts balances', async () => {
+        await checkAccountsBalances(e2e, -150, 80, 70)
+    })
+
     it('Delete transaction', async () => {
         await e2e.step('Delete transaction')
             .spec('delete')
             .delete('/transaction/{id}')
             .withPathParams('id', '$S{TransactionID}');
 
-        //TODO backend is too slow to list all transactions
-        /*await e2e.step('List transactions')
+        await e2e.step('List transactions')
             .spec('read')
             .get('/transaction')
-            .expectJsonMatch('data[*].id', expression('$S{TransactionID}', '$V.includes($S{transaction})'))*/
+            .expectJsonMatch('data[*].id', expression('$S{TransactionID}', '!$V.includes($S{TransactionID})'))
+
+    })
+
+    it('Transaction deletion reverts accounts balances', async () => {
+        await checkAccountsBalances(e2e, 0, 0, 0)
 
         await e2e.cleanup()
     })

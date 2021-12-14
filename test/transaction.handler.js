@@ -27,4 +27,15 @@ async function createAccountForTransaction(e2e) {
         .stores('ExpenseAccountID', 'data.id')
 }
 
-module.exports = { createAccountForTransaction }
+async function checkAccountsBalances(e2e, income, assets, expense) {
+    await e2e.step('Read income account')
+        .spec('Validate account balance', {id: '$S{IncomeAccountID}', balance: income})
+
+    await e2e.step('Read asset account')
+        .spec('Validate account balance', {id: '$S{AssetAccountID}', balance: assets})
+
+    await e2e.step('Read expense account')
+        .spec('Validate account balance', {id: '$S{ExpenseAccountID}', balance: expense})
+}
+
+module.exports = { createAccountForTransaction, checkAccountsBalances}
