@@ -5,6 +5,13 @@ const {createAccountForTransaction, checkAccountsBalances} = require('./transact
 describe('Transaction operations', () => {
     let e2e = pactum.e2e("Transaction operations")
 
+    it('Get transactions count', async () => {
+        await e2e.step('List transactions')
+            .spec('read')
+            .get('/transaction')
+            .stores("TransactionCount", "count")
+    })
+
     it('Create Transaction', async () => {
         await createAccountForTransaction(e2e)
 
@@ -19,6 +26,13 @@ describe('Transaction operations', () => {
                     }
                 }
             })
+    })
+
+    it('Transaction count is increased after creation', async () => {
+        await e2e.step('List transactions')
+            .spec('read')
+            .get('/transaction')
+            .expectJsonMatch("count", expression('$S{TransactionCount} + 1', '$V === $S{TransactionCount} + 1'))
     })
 
     it('List transactions', async () => {
@@ -82,6 +96,13 @@ describe('Transaction operations', () => {
             .expectJson("data.attributes.operations[2].amount", 70)
     })
 
+    it('Transaction count is untouched after update', async () => {
+        await e2e.step('List transactions')
+            .spec('read')
+            .get('/transaction')
+            .expectJsonMatch("count", expression('$S{TransactionCount} + 1', '$V === $S{TransactionCount} + 1'))
+    })
+
     it('Updated transaction updates accounts balances', async () => {
         await checkAccountsBalances(e2e, -150, 80, 70)
     })
@@ -97,6 +118,13 @@ describe('Transaction operations', () => {
             .get('/transaction')
             .expectJsonMatch('data[*].id', expression('$S{TransactionID}', '!$V.includes($S{TransactionID})'))
 
+    })
+
+    it('Transaction count is reverted after deletion', async () => {
+        await e2e.step('List transactions')
+            .spec('read')
+            .get('/transaction')
+            .expectJsonMatch("count", expression('$S{TransactionCount}', '$V === $S{TransactionCount}'))
     })
 
     it('Transaction deletion reverts accounts balances', async () => {
