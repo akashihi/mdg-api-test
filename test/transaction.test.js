@@ -1,5 +1,5 @@
 const pactum = require('pactum');
-const {int, expression} = require('pactum-matchers');
+const {expression} = require('pactum-matchers');
 const {createAccountForTransaction, checkAccountsBalances} = require('./transaction.handler')
 
 describe('Transaction operations', () => {
@@ -85,15 +85,13 @@ describe('Transaction operations', () => {
                     }
                 }
             })
-            .expectJson("data.attributes.operations[1].amount", 80)
-            .expectJson("data.attributes.operations[2].amount", 70)
+            .expectJsonLike("data.attributes.operations[*].amount", [-150, 80, 70])
 
         await e2e.step('Read updated transaction')
             .spec('read')
             .get('/transaction/{id}')
             .withPathParams('id', '$S{TransactionID}')
-            .expectJson("data.attributes.operations[1].amount", 80)
-            .expectJson("data.attributes.operations[2].amount", 70)
+            .expectJsonLike("data.attributes.operations[*].amount", [-150, 80, 70])
     })
 
     it('Transaction count is untouched after update', async () => {
