@@ -38,4 +38,16 @@ async function checkAccountsBalances(e2e, income, assets, expense) {
         .spec('Validate account balance', {id: '$S{ExpenseAccountID}', balance: expense})
 }
 
-module.exports = { createAccountForTransaction, checkAccountsBalances}
+async function createUSDAccountForTransaction(e2e) {
+    let usdStep = pactum;
+
+    if (e2e) {
+        usdStep = e2e.step('Prepare USD asset account');
+    }
+
+    await usdStep
+        .spec('Create Account', {'@DATA:TEMPLATE@': 'Account:AssetUSD'})
+        .stores('AssetUSDAccountID', 'data.id')
+}
+
+module.exports = { createAccountForTransaction, checkAccountsBalances, createUSDAccountForTransaction}
