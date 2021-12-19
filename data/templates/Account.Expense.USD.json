@@ -1,0 +1,12 @@
+{
+  "Account:ExpenseUSD": {
+    "data": {
+      "attributes": {
+        "account_type": "expense",
+        "currency_id": 840,
+        "name": "Rent"
+      },
+      "type": "account"
+    }
+  }
+}

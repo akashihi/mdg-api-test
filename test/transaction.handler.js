@@ -45,9 +45,10 @@ async function createUSDAccountForTransaction(e2e) {
         usdStep = e2e.step('Prepare USD asset account');
     }
 
-    await usdStep
+    return usdStep
         .spec('Create Account', {'@DATA:TEMPLATE@': 'Account:AssetUSD'})
         .stores('AssetUSDAccountID', 'data.id')
+        .returns("data.id")
 }
 
 module.exports = { createAccountForTransaction, checkAccountsBalances, createUSDAccountForTransaction}

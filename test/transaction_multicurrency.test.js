@@ -1,15 +1,12 @@
 const pactum = require('pactum');
-const {createAccountForTransaction} = require('./transaction.handler')
+const {createAccountForTransaction, createUSDAccountForTransaction} = require('./transaction.handler')
 
 describe('Transaction multi-currency operations', () => {
     let e2e = pactum.e2e("Transaction multi-currency operations")
 
     it('Create multi-currency transaction', async () => {
         await createAccountForTransaction(e2e)
-
-        await e2e.step('Create USD Account')
-            .spec('Create Account', {'@DATA:TEMPLATE@': 'Account:AssetUSD'})
-            .stores('AssetUSDAccountID', 'data.id')
+        await createUSDAccountForTransaction(e2e)
 
         await e2e.step('Create transaction')
             .spec('Create Transaction', {'@DATA:TEMPLATE@': 'Transaction:MultiCurrency'})
