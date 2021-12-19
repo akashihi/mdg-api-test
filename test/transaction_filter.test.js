@@ -3,7 +3,7 @@ const {expression} = require('pactum-matchers');
 const {createAccountForTransaction} = require('./transaction.handler')
 
 describe('Transaction filtering', () => {
-    let e2e = pactum.e2e("Transaction operations")
+    let e2e = pactum.e2e("Transaction filtering")
 
     it('Create multiple transactions', async () => {
         await createAccountForTransaction(e2e)
