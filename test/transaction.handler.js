@@ -51,4 +51,17 @@ async function createUSDAccountForTransaction(e2e) {
         .returns("data.id")
 }
 
-module.exports = { createAccountForTransaction, checkAccountsBalances, createUSDAccountForTransaction}
+async function createUSDExpenseAccountForTransaction(e2e) {
+    let usdStep = pactum;
+
+    if (e2e) {
+        usdStep = e2e.step('Prepare USD expense account');
+    }
+
+    return usdStep
+        .spec('Create Account', {'@DATA:TEMPLATE@': 'Account:ExpenseUSD'})
+        .stores('ExpenseUSDAccountID', 'data.id')
+        .returns("data.id")
+}
+
+module.exports = { createAccountForTransaction, checkAccountsBalances, createUSDAccountForTransaction, createUSDExpenseAccountForTransaction}
