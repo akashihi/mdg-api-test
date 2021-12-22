@@ -40,4 +40,5 @@ function test() {
         .pipe(mocha({reporter: 'list'}));
 }
 
-exports.default = series(standardjs, jshint_task, lint, test)
+exports.default = series(standardjs, jshint_task, lint)
+exports.test = test
