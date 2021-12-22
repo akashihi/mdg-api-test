@@ -1,0 +1,12 @@
+{
+  "Account:Income": {
+    "data": {
+      "attributes": {
+        "account_type": "income",
+        "currency_id": 978,
+        "name": "Salary"
+      },
+      "type": "account"
+    }
+  }
+}

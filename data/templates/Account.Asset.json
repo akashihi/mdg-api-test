@@ -1,0 +1,15 @@
+{
+  "Account:Asset": {
+    "data": {
+      "attributes": {
+        "account_type": "asset",
+        "currency_id" : 978,
+        "name"        : "Wallet",
+        "favorite"    : true,
+        "operational" : true,
+        "asset_type"  : "cash"
+      },
+      "type": "account"
+    }
+  }
+}

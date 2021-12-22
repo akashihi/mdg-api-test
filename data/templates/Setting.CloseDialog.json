@@ -1,0 +1,11 @@
+{
+  "Setting:CloseDialog": {
+    "data": {
+      "attributes": {
+        "value": "true"
+      },
+      "id": "ui.transaction.closedialog",
+      "type": "setting"
+    }
+  }
+}

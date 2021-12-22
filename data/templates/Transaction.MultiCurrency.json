@@ -1,0 +1,26 @@
+{
+  "Transaction:MultiCurrency": {
+    "data": {
+      "attributes": {
+        "timestamp": "2017-02-05T13:54:35",
+        "comment": "Test transaction",
+        "tags": [
+          "test",
+          "transaction"
+        ],
+        "operations": [
+          {
+            "account_id": "$S{AssetAccountID}",
+            "amount": -100
+          },
+          {
+            "account_id": "$S{AssetUSDAccountID}",
+            "rate": 0.5,
+            "amount": 200
+          }
+        ]
+      },
+      "type": "transaction"
+    }
+  }
+}

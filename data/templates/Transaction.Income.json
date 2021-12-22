@@ -1,0 +1,25 @@
+{
+  "Transaction:Income": {
+    "data": {
+      "attributes": {
+        "timestamp": "2017-02-05T16:45:36",
+        "comment": "Income transaction",
+        "tags": [
+          "income",
+          "transaction"
+        ],
+        "operations": [
+          {
+            "account_id": "$S{IncomeAccountID}",
+            "amount": -150
+          },
+          {
+            "account_id": "$S{AssetAccountID}",
+            "amount": 150
+          }
+        ]
+      },
+      "type": "transaction"
+    }
+  }
+}
