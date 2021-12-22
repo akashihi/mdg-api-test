@@ -7,7 +7,7 @@
     "test": "test"
   },
   "scripts": {
-    "lint": "gulp"
+    "lint": "gulp",
     "test": "gulp test"
   },
   "repository": {
