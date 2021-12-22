@@ -9,5 +9,6 @@
         "ecmaVersion": 2018
     },
     "rules": {
+        "no-template-curly-in-string": "off"
     }
 }

@@ -7,7 +7,6 @@ class BudgetCalculationsSpecification extends Specification {
     static def expenseId
     static def rateConverter
 
-
     def setupSpec() {
         setupAPI()
 
@@ -23,7 +22,6 @@ class BudgetCalculationsSpecification extends Specification {
     def cleanupSpec() {
         BudgetFixture.remove("20170401")
     }
-
 
     def 'Budget incoming amount should be sum of all asset accounts before budget term'() {
         given: 'Sum all transactions before budget'
@@ -52,7 +50,6 @@ class BudgetCalculationsSpecification extends Specification {
         BigDecimal actualAmount = given().when().get(API.Budget, "20170401")
                 .then().spec(readSpec())
                 .extract().path("data.attributes.incoming_amount")
-
 
         then: "Budget incoming amount should match sum of asset transactions"
         assertThat(actualAmount.setScale(2, RoundingMode.HALF_UP).compareTo(incomingAmount.setScale(2, RoundingMode.HALF_UP)), is(0))
@@ -96,7 +93,6 @@ class BudgetCalculationsSpecification extends Specification {
         BigDecimal entryAccount = entryBody.extract().path("data.attributes.account_id")
         def newAmount = new BigDecimal(entryAmount).add(new BigDecimal(9000))
 
-
         def newEntry = [
                 "data": [
                         "type"      : "budgetentry",
@@ -109,7 +105,6 @@ class BudgetCalculationsSpecification extends Specification {
         given().body(JsonOutput.toJson(newEntry))
                 .when().put(API.BudgetEntry,"20170301", entryIds.first())
                 .then().spec(modifySpec())
-
 
         then: "Budget expected amount should differ by 9000"
         BigDecimal updatedAmount = when().get(API.Budget, "20170401")

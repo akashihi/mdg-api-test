@@ -2,6 +2,16 @@ const gulp = require('gulp');
 const { series } = require('gulp');
 const mocha = require('gulp-mocha');
 const eslint = require('gulp-eslint');
+var standard = require('gulp-standard')
+
+function standardjs() {
+    return gulp.src(['test/*.js'])
+        .pipe(standard({fix: true, env: "mocha"}))
+        .pipe(standard.reporter('default', {
+            breakOnError: true,
+            quiet: true
+        }))
+}
 
 function lint() {
     return gulp.src(['test/*.js'])
@@ -22,4 +32,4 @@ function test() {
         .pipe(mocha({reporter: 'list'}));
 }
 
-exports.default = series(lint, test)
+exports.default = series(standardjs, lint, test)
