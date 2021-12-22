@@ -1,6 +1,5 @@
 const pactum = require('pactum');
-const {int, expression} = require('pactum-matchers');
-const itParam = require("mocha-param");
+const {expression} = require('pactum-matchers');
 const {createAccountForTransaction, createUSDExpenseAccountForTransaction} = require('./transaction.handler')
 
 describe('Budget operations', () => {

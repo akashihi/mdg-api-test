@@ -1,5 +1,5 @@
 const pactum = require('pactum');
-const {like, string, expression, int} = require('pactum-matchers');
+const {expression} = require('pactum-matchers');
 
 async function make_tree() {
     const outerCategoryID = await pactum.spec('Create Category', {

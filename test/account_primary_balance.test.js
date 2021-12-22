@@ -1,5 +1,4 @@
 const pactum = require('pactum');
-const {int, expression} = require('pactum-matchers');
 
 describe('Account primary balance', () => {
     let e2e = pactum.e2e("Account primary balance")
