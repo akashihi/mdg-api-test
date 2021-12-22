@@ -1,26 +1,28 @@
 const pactum = require('pactum');
 const {createAccountForTransaction} = require('./transaction.handler')
 
-describe('BudgetEntry <-> Transaction operations', () => {
-    let e2e = pactum.e2e('BudgetEntry <-> Transaction operations')
+
+describe('Budget <-> Transaction operations', () => {
+    let e2e = pactum.e2e("Budget <-> Transaction operations")
 
     it('Prepare budget and accounts', async () => {
         await createAccountForTransaction(e2e)
         await e2e.step('Post budget')
             .spec('Create Budget', {'@DATA:TEMPLATE@': 'Budget:Feb'})
             .stores('BudgetID', 'data.id')
+            .stores("BudgetActualAmount", "data.attributes.outgoing_amount.actual")
             .clean()
             .delete("/budget/{id}")
             .withPathParams('id', '$S{BudgetID}')
     })
 
-    it('BudgetEntry actual amount is updated after transaction creation', async () => {
+    it('Budget actual amount is updated after transaction creation', async () => {
         await e2e.step('Create transaction')
             .spec('Create Transaction', {'@DATA:TEMPLATE@': 'Transaction:Rent'})
             .stores('TransactionID', 'data.id')
 
-        await e2e.step('List budget entries')
-            .spec('Validate Budget Entry actual amount', 100)
+        await e2e.step('Read budget')
+            .spec('Validate Budget actual amount', 50);
     })
 
 
@@ -49,8 +51,8 @@ describe('BudgetEntry <-> Transaction operations', () => {
                 }
             })
 
-        await e2e.step('List budget entries')
-            .spec('Validate Budget Entry actual amount', 70)
+        await e2e.step('Read budget')
+            .spec('Validate Budget actual amount', 80);
     })
 
     it('BudgetEntry actual amount is reverted after transaction deletion', async () => {
@@ -59,8 +61,8 @@ describe('BudgetEntry <-> Transaction operations', () => {
             .delete('/transaction/{id}')
             .withPathParams('id', '$S{TransactionID}');
 
-        await e2e.step('List budget entries')
-            .spec('Validate Budget Entry actual amount', 0)
+        await e2e.step('Read budget')
+            .spec('Validate Budget actual amount', 0);
 
         await e2e.cleanup()
 
