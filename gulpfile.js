@@ -2,7 +2,8 @@ const gulp = require('gulp');
 const { series } = require('gulp');
 const mocha = require('gulp-mocha');
 const eslint = require('gulp-eslint');
-var standard = require('gulp-standard')
+const standard = require('gulp-standard')
+const jshint = require('gulp-jshint');
 
 function standardjs() {
     return gulp.src(['test/*.js'])
@@ -11,6 +12,13 @@ function standardjs() {
             breakOnError: true,
             quiet: true
         }))
+}
+
+function jshint_task() {
+    return gulp.src(['test/*.js'])
+        .pipe(jshint())
+        .pipe(jshint.reporter('jshint-stylish'))
+        .pipe(jshint.reporter('fail'));
 }
 
 function lint() {
@@ -32,4 +40,4 @@ function test() {
         .pipe(mocha({reporter: 'list'}));
 }
 
-exports.default = series(standardjs, lint, test)
+exports.default = series(standardjs, jshint_task, lint, test)

@@ -1,5 +1,5 @@
-const pactum = require('pactum')
-const { expression } = require('pactum-matchers')
+const pactum = require('pactum');
+const { expression } = require('pactum-matchers');
 
 async function makeTree () {
   const outerCategoryID = await pactum.spec('Create Category', {
@@ -12,7 +12,7 @@ async function makeTree () {
       }
     }
   })
-    .returns('data.id')
+    .returns('data.id');
 
   const middleCategoryID = await pactum.spec('Create Category', {
     '@DATA:TEMPLATE@': 'Category:BasicCategory',
@@ -25,7 +25,7 @@ async function makeTree () {
       }
     }
   })
-    .returns('data.id')
+    .returns('data.id');
 
   const innerCategoryID = await pactum.spec('Create Category', {
     '@DATA:TEMPLATE@': 'Category:BasicCategory',
@@ -38,25 +38,25 @@ async function makeTree () {
       }
     }
   })
-    .returns('data.id')
+    .returns('data.id');
   return {
     outer: outerCategoryID,
     middle: middleCategoryID,
     inner: innerCategoryID
-  }
+  };
 }
 
 it('Category parenting', async () => {
-  const categories = await makeTree()
+  const categories = await makeTree();
 
   await pactum.spec('Get Category Tree', categories.outer)
     .expectJson('data.id', categories.outer)
     .expectJson('data.attributes.children[0].id', categories.middle)
-    .expectJson('data.attributes.children[0].children[0].id', categories.inner)
-})
+    .expectJson('data.attributes.children[0].children[0].id', categories.inner);
+});
 
 it('Category re-parenting', async () => {
-  const categories = await makeTree()
+  const categories = await makeTree();
 
   await pactum.spec('update')
     .put('/category/{id}')
@@ -70,15 +70,15 @@ it('Category re-parenting', async () => {
           }
         }
       }
-    })
+    });
     // .expectJson("data.attributes.parent_id", outerCategoryID) //TODO backend bug
 
   await pactum.spec('Get Category Tree', categories.outer)
-    .expectJsonLike('data.attributes.children[*].id', [categories.middle, categories.inner])
-})
+    .expectJsonLike('data.attributes.children[*].id', [categories.middle, categories.inner]);
+});
 
 it('Category cyclic reparenting is prevented', async () => {
-  const categories = await makeTree()
+  const categories = await makeTree();
 
   await pactum.spec('expect error', { statusCode: 412, errorCode: 'CATEGORY_TREE_CYCLED' })
     .put('/category/{id}')
@@ -92,11 +92,11 @@ it('Category cyclic reparenting is prevented', async () => {
           }
         }
       }
-    })
-})
+    });
+});
 
 it('Self re-parenting move to top', async () => {
-  const categories = await makeTree()
+  const categories = await makeTree();
 
   await pactum.spec('update')
     .put('/category/{id}')
@@ -110,19 +110,19 @@ it('Self re-parenting move to top', async () => {
           }
         }
       }
-    })
+    });
     // .expectJson("data.attributes.parent_id", null) //TODO backend bug
 
   await pactum.spec('Get Category Tree', categories.outer)
-    .expectJsonMatch('data.attributes', expression('undefined', '!$V.hasOwnProperty("children")'))
+    .expectJsonMatch('data.attributes', expression('undefined', '!$V.hasOwnProperty("children")'));
 
   await pactum.spec('Get Category Tree', categories.middle)
-    .expectJson('data.attributes.children[0].id', categories.inner)
-})
+    .expectJson('data.attributes.children[0].id', categories.inner);
+});
 
 it('Category of one type can not be parented to category of different type', async () => {
   const outerCategoryID = await pactum.spec('Create Category', { '@DATA:TEMPLATE@': 'Category:BasicCategory' })
-    .returns('data.id')
+    .returns('data.id');
 
   await pactum.spec('expect error', { statusCode: 412, errorCode: 'CATEGORY_INVALID_TYPE' })
     .post('/category')
@@ -136,12 +136,12 @@ it('Category of one type can not be parented to category of different type', asy
           }
         }
       }
-    })
-})
+    });
+});
 
 it('Category of one type can not be re-parented to category of different type', async () => {
   const expenseCategoryID = await pactum.spec('Create Category', { '@DATA:TEMPLATE@': 'Category:BasicCategory' })
-    .returns('data.id')
+    .returns('data.id');
 
   const incomeCategoryID = await pactum.spec('Create Category', {
     '@DATA:TEMPLATE@': 'Category:BasicCategory',
@@ -153,7 +153,7 @@ it('Category of one type can not be re-parented to category of different type', 
       }
     }
   })
-    .returns('data.id')
+    .returns('data.id');
 
   await pactum.spec('expect error', { statusCode: 412, errorCode: 'CATEGORY_INVALID_TYPE' })
     .put('/category/{id}')
@@ -167,5 +167,5 @@ it('Category of one type can not be re-parented to category of different type', 
           }
         }
       }
-    })
-})
+    });
+});

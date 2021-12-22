@@ -1,7 +1,7 @@
-const pactum = require('pactum')
+const pactum = require('pactum');
 
 describe('Account primary balance', () => {
-  const e2e = pactum.e2e('Account primary balance')
+  const e2e = pactum.e2e('Account primary balance');
 
   it('Create account in non-default currency', async () => {
     await e2e.step('Post account')
@@ -15,7 +15,7 @@ describe('Account primary balance', () => {
           }
         }
       })
-      .stores('IncomeAccountID', 'data.id')
+      .stores('IncomeAccountID', 'data.id');
 
     await e2e.step('Post account')
       .spec('Create Account', {
@@ -28,25 +28,25 @@ describe('Account primary balance', () => {
           }
         }
       })
-      .stores('AssetAccountID', 'data.id')
-  })
+      .stores('AssetAccountID', 'data.id');
+  });
 
   it('Transaction updates primary balance', async () => {
     await e2e.step('Create transaction')
-      .spec('Create Transaction', { '@DATA:TEMPLATE@': 'Transaction:Income' })
+      .spec('Create Transaction', { '@DATA:TEMPLATE@': 'Transaction:Income' });
 
     await e2e.step('Read account')
       .spec('read')
       .get('/account/{id}')
       .withPathParams('id', '$S{IncomeAccountID}')
-      .expectJson('data.attributes.primary_balance', -133.5)
+      .expectJson('data.attributes.primary_balance', -133.5);
 
     await e2e.step('Read account')
       .spec('read')
       .get('/account/{id}')
       .withPathParams('id', '$S{AssetAccountID}')
-      .expectJson('data.attributes.primary_balance', 133.5)
+      .expectJson('data.attributes.primary_balance', 133.5);
 
-    await e2e.cleanup()
-  })
-})
+    await e2e.cleanup();
+  });
+});

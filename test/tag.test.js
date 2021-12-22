@@ -1,22 +1,22 @@
-const pactum = require('pactum')
-const { createAccountForTransaction } = require('./transaction.handler')
+const pactum = require('pactum');
+const { createAccountForTransaction } = require('./transaction.handler');
 
 function makeTag (length) {
-  let result = ''
-  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
-  const charactersLength = characters.length
+  let result = '';
+  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  const charactersLength = characters.length;
   for (let i = 0; i < length; i++) {
     result += characters.charAt(Math.floor(Math.random() *
-            charactersLength))
+            charactersLength));
   }
-  return result
+  return result;
 }
 
 it('Tag retrieval', async () => {
-  await createAccountForTransaction()
+  await createAccountForTransaction();
 
-  const firstTag = makeTag(8)
-  const secondTag = makeTag(16)
+  const firstTag = makeTag(8);
+  const secondTag = makeTag(16);
 
   await pactum.spec('Create Transaction', {
     '@DATA:TEMPLATE@': 'Transaction:Rent',
@@ -27,9 +27,9 @@ it('Tag retrieval', async () => {
         }
       }
     }
-  })
+  });
 
   await pactum.spec('read')
     .get('/tag')
-    .expectJsonLike('data[*].attributes.txtag', [firstTag, secondTag])
-})
+    .expectJsonLike('data[*].attributes.txtag', [firstTag, secondTag]);
+});

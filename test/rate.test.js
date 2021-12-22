@@ -1,11 +1,11 @@
-const pactum = require('pactum')
-const { like } = require('pactum-matchers')
-const itParam = require('mocha-param')
+const pactum = require('pactum');
+const { like } = require('pactum-matchers');
+const itParam = require('mocha-param');
 
-const USD = 840
-const EUR = 978
-const INR = 356
-const HUF = 348
+const USD = 840;
+const EUR = 978;
+const INR = 356;
+const HUF = 348;
 
 it('Load list of rates', async () => {
   await pactum.spec('read')
@@ -19,8 +19,8 @@ it('Load list of rates', async () => {
         to_currency: USD,
         rate: 1.19
       }
-    })
-})
+    });
+});
 
 const RATES = [
   {
@@ -35,7 +35,7 @@ const RATES = [
     to: HUF,
     rate: 1
   }
-]
+];
 
 itParam('Check ${value.ratename} rate value', RATES, async (params) => { // eslint-disable-line no-template-curly-in-string
   await pactum.spec('read')
@@ -51,5 +51,5 @@ itParam('Check ${value.ratename} rate value', RATES, async (params) => { // esli
         to_currency: params.to,
         rate: params.rate
       }
-    })
-})
+    });
+});

@@ -1,6 +1,6 @@
-const pactum = require('pactum')
-const { int, expression } = require('pactum-matchers')
-const itParam = require('mocha-param')
+const pactum = require('pactum');
+const { int, expression } = require('pactum-matchers');
+const itParam = require('mocha-param');
 
 const INVALID_BUDGETS = [
   {
@@ -33,10 +33,10 @@ const INVALID_BUDGETS = [
     end: '2017-02-10',
     msg: 'BUDGET_OVERLAPPING'
   }
-]
+];
 
 describe('Budget operations', () => {
-  const e2e = pactum.e2e('Budget operations')
+  const e2e = pactum.e2e('Budget operations');
 
   it('Budget account', async () => {
     await e2e.step('Post budget')
@@ -49,15 +49,15 @@ describe('Budget operations', () => {
             id: int()
           }
         }
-      })
-  })
+      });
+  });
 
   it('List budgets', async () => {
     await e2e.step('List budgets')
       .spec('read')
       .get('/budget')
-      .expectJsonMatch('data[*].id', expression('$S{BudgetID}', '$V.includes($S{BudgetID})'))
-  })
+      .expectJsonMatch('data[*].id', expression('$S{BudgetID}', '$V.includes($S{BudgetID})'));
+  });
 
   itParam('Budget with ${value.id} is invalid', INVALID_BUDGETS, async (params) => { // eslint-disable-line no-template-curly-in-string
     await e2e.step('Budget validity')
@@ -73,8 +73,8 @@ describe('Budget operations', () => {
             }
           }
         }
-      })
-  })
+      });
+  });
 
   it('Read budget by date', async () => {
     await e2e.step('Read budget')
@@ -88,20 +88,20 @@ describe('Budget operations', () => {
             id: int()
           }
         }
-      })
-  })
+      });
+  });
 
   it('Delete budget', async () => {
     await e2e.step('Delete budget')
       .spec('delete')
       .delete('/budget/{id}')
-      .withPathParams('id', '$S{BudgetID}')
+      .withPathParams('id', '$S{BudgetID}');
 
     await e2e.step('List budgets')
       .spec('read')
       .get('/budget')
-      .expectJsonMatch('data[*].id', expression('$S{BudgetID}', '!$V.includes($S{BudgetID})'))
+      .expectJsonMatch('data[*].id', expression('$S{BudgetID}', '!$V.includes($S{BudgetID})'));
 
-    await e2e.cleanup()
-  })
-})
+    await e2e.cleanup();
+  });
+});

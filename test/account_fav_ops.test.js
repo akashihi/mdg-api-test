@@ -1,23 +1,23 @@
-const pactum = require('pactum')
+const pactum = require('pactum');
 
 describe('Account flag management', () => {
-  const e2e = pactum.e2e('Account operations')
+  const e2e = pactum.e2e('Account operations');
 
   it('Create account with flags', async () => {
     await e2e.step('Post account')
       .spec('Create Account', { '@DATA:TEMPLATE@': 'Account:Asset' })
       .stores('AccountID', 'data.id')
       .expectJson('data.attributes.favorite', true)
-      .expectJson('data.attributes.operational', true)
-  })
+      .expectJson('data.attributes.operational', true);
+  });
 
   it('List flagged accounts', async () => {
     await e2e.step('List accounts')
       .spec('read')
       .get('/account')
       .expectJson('data[id=$S{AccountID}].attributes.favorite', true)
-      .expectJson('data[id=$S{AccountID}].attributes.operational', true)
-  })
+      .expectJson('data[id=$S{AccountID}].attributes.operational', true);
+  });
 
   it('Read account with flags', async () => {
     await e2e.step('Read account')
@@ -25,8 +25,8 @@ describe('Account flag management', () => {
       .get('/account/{id}')
       .withPathParams('id', '$S{AccountID}')
       .expectJson('data.attributes.favorite', true)
-      .expectJson('data.attributes.operational', true)
-  })
+      .expectJson('data.attributes.operational', true);
+  });
 
   it('Update flagged account', async () => {
     await e2e.step('Update flagged account')
@@ -46,14 +46,14 @@ describe('Account flag management', () => {
         }
       })
       .expectJson('data.attributes.favorite', false)
-      .expectJson('data.attributes.operational', false)
+      .expectJson('data.attributes.operational', false);
 
     await e2e.step('Read flagged account')
       .spec('read')
       .get('/account/{id}')
       .withPathParams('id', '$S{AccountID}')
       .expectJson('data.attributes.favorite', false)
-      .expectJson('data.attributes.operational', false)
-    await e2e.cleanup()
-  })
-})
+      .expectJson('data.attributes.operational', false);
+    await e2e.cleanup();
+  });
+});

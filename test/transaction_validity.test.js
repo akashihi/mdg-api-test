@@ -1,8 +1,8 @@
-const pactum = require('pactum')
-const { createAccountForTransaction, createUSDAccountForTransaction } = require('./transaction.handler')
+const pactum = require('pactum');
+const { createAccountForTransaction, createUSDAccountForTransaction } = require('./transaction.handler');
 
 it('Empty transactions are not allowed', async () => {
-  await createAccountForTransaction()
+  await createAccountForTransaction();
 
   // No way to remove field from the template
   await pactum.spec('expect error', { statusCode: 412, errorCode: 'TRANSACTION_EMPTY' })
@@ -20,11 +20,11 @@ it('Empty transactions are not allowed', async () => {
         },
         type: 'transaction'
       }
-    })
-})
+    });
+});
 
 it('Empty operations are ignored', async () => {
-  await createAccountForTransaction()
+  await createAccountForTransaction();
 
   await pactum.spec('expect error', { statusCode: 412, errorCode: 'TRANSACTION_EMPTY' })
     .post('/transaction')
@@ -47,11 +47,11 @@ it('Empty operations are ignored', async () => {
           }
         }
       }
-    })
-})
+    });
+});
 
 it('Unbalanced transactions are not allowed', async () => {
-  await createAccountForTransaction()
+  await createAccountForTransaction();
 
   await pactum.spec('expect error', { statusCode: 412, errorCode: 'TRANSACTION_NOT_BALANCED' })
     .post('/transaction')
@@ -74,12 +74,12 @@ it('Unbalanced transactions are not allowed', async () => {
           }
         }
       }
-    })
-})
+    });
+});
 
 it('Multi currency transaction without rate are not allowed', async () => {
-  await createAccountForTransaction()
-  await createUSDAccountForTransaction()
+  await createAccountForTransaction();
+  await createUSDAccountForTransaction();
 
   // No way to remove field from the template
   await pactum.spec('expect error', { statusCode: 412, errorCode: 'TRANSACTION_AMBIGUOUS_RATE' })
@@ -106,12 +106,12 @@ it('Multi currency transaction without rate are not allowed', async () => {
         },
         type: 'transaction'
       }
-    })
-})
+    });
+});
 
 it('Multi currency transaction with rate set to all operations are not allowed', async () => {
-  await createAccountForTransaction()
-  await createUSDAccountForTransaction()
+  await createAccountForTransaction();
+  await createUSDAccountForTransaction();
 
   // No way to remove field from the template
   await pactum.spec('expect error', { statusCode: 412, errorCode: 'TRANSACTION_NO_DEFAULT_RATE' })
@@ -129,12 +129,12 @@ it('Multi currency transaction with rate set to all operations are not allowed',
           }
         }
       }
-    })
-})
+    });
+});
 
 it('Multi currency transaction with default rate on different currencies are not allowed', async () => {
-  await createAccountForTransaction()
-  await createUSDAccountForTransaction()
+  await createAccountForTransaction();
+  await createUSDAccountForTransaction();
 
   // No way to remove field from the template
   await pactum.spec('expect error', { statusCode: 412, errorCode: 'TRANSACTION_AMBIGUOUS_RATE' })
@@ -154,12 +154,12 @@ it('Multi currency transaction with default rate on different currencies are not
           }
         }
       }
-    })
-})
+    });
+});
 
 it('Multi currency transaction with 0 rate is not allowed', async () => {
-  await createAccountForTransaction()
-  await createUSDAccountForTransaction()
+  await createAccountForTransaction();
+  await createUSDAccountForTransaction();
 
   // No way to remove field from the template
   await pactum.spec('expect error', { statusCode: 412, errorCode: 'TRANSACTION_ZERO_RATE' })
@@ -179,12 +179,12 @@ it('Multi currency transaction with 0 rate is not allowed', async () => {
           }
         }
       }
-    })
-})
+    });
+});
 
 it('Unbalanced multi currency transactions are not allowed', async () => {
-  await createAccountForTransaction()
-  await createUSDAccountForTransaction()
+  await createAccountForTransaction();
+  await createUSDAccountForTransaction();
 
   // No way to remove field from the template
   await pactum.spec('expect error', { statusCode: 412, errorCode: 'TRANSACTION_NOT_BALANCED' })
@@ -202,5 +202,5 @@ it('Unbalanced multi currency transactions are not allowed', async () => {
           }
         }
       }
-    })
-})
+    });
+});
