@@ -13,5 +13,5 @@ require('./budget.entry.handler');
 // global hook
 before(() => {
   stash.loadData();
-  request.setBaseUrl('http://localhost:9000/api');
+  request.setBaseUrl('http://localhost:8080/api');
 });

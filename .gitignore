@@ -106,6 +106,7 @@ gradle-app.setting
 ## Plugin-specific files:
 
 # IntelliJ
+*.iml
 /out/
 
 # mpeltonen/sbt-idea plugin
