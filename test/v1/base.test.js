@@ -4,7 +4,7 @@ const { request, stash } = require('pactum');
 require('./error.handler');
 require('./op.handler');
 require('./currency.handler');
-//require('./settings.handler');
+require('./settings.handler');
 //require('./category.handler');
 //require('./transaction.handler');
 //require('./budget.handler');
