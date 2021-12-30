@@ -7,6 +7,12 @@ const EUR = 978;
 const INR = 356;
 const HUF = 348;
 
+it('Check rate status readable', async () => {
+    await pactum.spec('read')
+        .get('/rates/status')
+        .expectJsonMatch('dt',like("0001-01-01T00:00:00"));
+});
+
 it('Load list of rates', async () => {
     await pactum.spec('read')
         .get('/rates/{ts}')
