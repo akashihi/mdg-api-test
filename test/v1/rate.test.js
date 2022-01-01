@@ -17,12 +17,12 @@ it('Load list of rates', async () => {
     await pactum.spec('read')
         .get('/rates/{ts}')
         .withPathParams('ts', '2017-09-20T13:29:00')
-        .expectJsonMatch('rates[0]', {
-            id: like(1),
+        .expectJsonLike('rates', [{
+            id: 1,
             from: EUR,
             to: USD,
             rate: 1.19
-        });
+        }]);
 });
 
 const RATES = [
