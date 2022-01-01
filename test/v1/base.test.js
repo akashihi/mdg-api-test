@@ -5,7 +5,7 @@ require('./error.handler');
 require('./op.handler');
 require('./currency.handler');
 require('./settings.handler');
-//require('./category.handler');
+require('./category.handler');
 //require('./transaction.handler');
 //require('./budget.handler');
 //require('./budget.entry.handler');

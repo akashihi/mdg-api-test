@@ -70,8 +70,8 @@ it('Category re-parenting', async () => {
           }
         }
       }
-    });
-    // .expectJson("data.attributes.parent_id", outerCategoryID) //TODO backend bug
+    })
+    .expectJson("data.attributes.parent_id", categories.outer);
 
   await pactum.spec('Get Category Tree', categories.outer)
     .expectJsonLike('data.attributes.children[*].id', [categories.middle, categories.inner]);
@@ -110,8 +110,8 @@ it('Self re-parenting move to top', async () => {
           }
         }
       }
-    });
-    // .expectJson("data.attributes.parent_id", null) //TODO backend bug
+    })
+    .expectJson("data.attributes.parent_id", null);
 
   await pactum.spec('Get Category Tree', categories.outer)
     .expectJsonMatch('data.attributes', expression('undefined', '!$V.hasOwnProperty("children")'));
