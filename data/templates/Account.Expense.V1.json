@@ -1,0 +1,7 @@
+{
+  "Account:Expense:V1": {
+        "account_type": "EXPENSE",
+        "currency_id": 978,
+        "name": "Rent"
+  }
+}
