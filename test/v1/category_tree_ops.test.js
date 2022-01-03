@@ -1,43 +1,5 @@
 const pactum = require('pactum');
-
-async function makeTree() {
-    const outerCategoryID = await pactum.spec('Create Category', {
-        '@DATA:TEMPLATE@': 'Category:Basic:V1',
-        '@OVERRIDES@': {
-            name: 'outer'
-        }
-    })
-        .returns('id');
-
-    const middleCategoryID = await pactum.spec('Create Category', {
-        '@DATA:TEMPLATE@': 'Category:Basic:V1',
-        '@OVERRIDES@': {
-            parent_id: outerCategoryID,
-            name: 'middle'
-        }
-    })
-        .returns('id');
-
-    const innerCategoryID = await pactum.spec('Create Category', {
-        '@DATA:TEMPLATE@': 'Category:Basic:V1',
-        '@OVERRIDES@': {
-            parent_id: middleCategoryID,
-            name: 'inner'
-        }
-    })
-        .returns('id');
-    return {
-        outer: outerCategoryID,
-        middle: middleCategoryID,
-        inner: innerCategoryID
-    };
-}
-
-async function dropTree(tree) {
-    await pactum.spec().delete('/categories/{id}').withPathParams("id", tree.outer);
-    await pactum.spec().delete('/categories/{id}').withPathParams("id", tree.middle);
-    await pactum.spec().delete('/categories/{id}').withPathParams("id", tree.inner);
-}
+const {makeTree, dropTree} = require('./category.handler')
 
 it('Category parenting', async () => {
     const categories = await makeTree();
