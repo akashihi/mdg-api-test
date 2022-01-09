@@ -1,0 +1,7 @@
+{
+  "Account:Income:V1": {
+    "account_type": "income",
+    "currency_id": 978,
+    "name": "Salary"
+  }
+}
