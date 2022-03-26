@@ -46,7 +46,7 @@ it('Unbalanced transactions are not allowed', async () => {
     await pactum.spec('expect error', { statusCode: 412, title: 'TRANSACTION_NOT_BALANCED' })
         .post('/transactions')
         .withJson({
-            '@DATA:TEMPLATE@': 'Transaction:Rent',
+            '@DATA:TEMPLATE@': 'Transaction:Rent:V1',
             '@OVERRIDES@': {
                 operations: [
                     {

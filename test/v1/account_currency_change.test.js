@@ -62,7 +62,7 @@ it('Transaction with multiple currencies have rate recalculated', async () => {
         .stores('AssetUSDAccountID', 'id')
         .returns('id');
     const eurAccountId = await pactum.spec('Create Account', {
-        '@DATA:TEMPLATE@': 'Account:ExpenseUSD:V1',
+        '@DATA:TEMPLATE@': 'Account:Expense:USD:V1',
         '@OVERRIDE': {
             currency_id: 978
         }
@@ -71,7 +71,7 @@ it('Transaction with multiple currencies have rate recalculated', async () => {
         .returns('id');
 
     const czkAccountId = await pactum.spec('Create Account', {
-        '@DATA:TEMPLATE@': 'Account:ExpenseUSD:V1',
+        '@DATA:TEMPLATE@': 'Account:Expense:USD:V1',
         '@OVERRIDE': {
             currency_id: 203
         }

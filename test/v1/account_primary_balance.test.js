@@ -1,4 +1,5 @@
 const pactum = require('pactum');
+const {like} = require("pactum-matchers");
 
 describe('Account primary balance', () => {
     const e2e = pactum.e2e('Account primary balance');
@@ -27,17 +28,27 @@ describe('Account primary balance', () => {
         await e2e.step('Create transaction')
             .spec('Create Transaction', { '@DATA:TEMPLATE@': 'Transaction:Income:V1' });
 
+        const now = new Date();
+        const now_ts = now.toISOString().slice(0,19);
+
+        const rate = await pactum.spec('read')
+            .get('/rates/{ts}/{from}/{to}')
+            .withPathParams('ts', now_ts)
+            .withPathParams('from', 840)
+            .withPathParams('to', 978)
+            .returns("rate");
+
         await e2e.step('Read account')
             .spec('read')
             .get('/accounts/{id}')
             .withPathParams('id', '$S{IncomeAccountID}')
-            .expectJson('primary_balance', -132);
+            .expectJson('primary_balance', -150*rate);
 
         await e2e.step('Read account')
             .spec('read')
             .get('/accounts/{id}')
             .withPathParams('id', '$S{AssetAccountID}')
-            .expectJson('primary_balance', 132);
+            .expectJson('primary_balance', 150*rate);
 
         await e2e.cleanup();
     });
