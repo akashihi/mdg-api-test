@@ -5,7 +5,7 @@ const { createAccountForTransaction, createUSDExpenseAccountForTransaction } = r
 describe('Budget operations', () => {
   const e2e = pactum.e2e('Budget operations');
 
-  it('Prepare budget and accounts', async () => {
+  it.skip('Prepare budget and accounts', async () => {
     await createAccountForTransaction(e2e);
     await e2e.step('Post budget')
       .spec('Create Budget', { '@DATA:TEMPLATE@': 'Budget:Feb' })
@@ -15,7 +15,7 @@ describe('Budget operations', () => {
       .withPathParams('id', '$S{BudgetID}');
   });
 
-  it('Budget entries are created for non-asset accounts during budget creation', async () => {
+  it.skip('Budget entries are created for non-asset accounts during budget creation', async () => {
     await e2e.step('List budget entries')
       .spec('read')
       .get('/budget/{id}/entry')
@@ -35,7 +35,7 @@ describe('Budget operations', () => {
       .expectJsonLike('data[*].attributes.account_id', [usdAccountId]);
   });
 
-  it('Read budget entry by id', async () => {
+  it.skip('Read budget entry by id', async () => {
     await e2e.step('List budget entries')
       .spec('read')
       .get('/budget/{id}/entry')

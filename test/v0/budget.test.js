@@ -38,7 +38,7 @@ const INVALID_BUDGETS = [
 describe('Budget operations', () => {
   const e2e = pactum.e2e('Budget operations');
 
-  it('Budget account', async () => {
+  it.skip('Budget account', async () => {
     await e2e.step('Post budget')
       .spec('Create Budget', { '@DATA:TEMPLATE@': 'Budget:Feb' })
       .stores('BudgetID', 'data.id')
@@ -52,14 +52,14 @@ describe('Budget operations', () => {
       });
   });
 
-  it('List budgets', async () => {
+  it.skip('List budgets', async () => {
     await e2e.step('List budgets')
       .spec('read')
       .get('/budget')
       .expectJsonMatch('data[*].id', expression('$S{BudgetID}', '$V.includes($S{BudgetID})'));
   });
 
-  itParam('Budget with ${value.id} is invalid', INVALID_BUDGETS, async (params) => { // eslint-disable-line no-template-curly-in-string
+  /*itParam('Budget with ${value.id} is invalid', INVALID_BUDGETS, async (params) => { // eslint-disable-line no-template-curly-in-string
     await e2e.step('Budget validity')
       .spec('expect error', { statusCode: 412, errorCode: params.msg })
       .post('/budget')
@@ -74,9 +74,9 @@ describe('Budget operations', () => {
           }
         }
       });
-  });
+  });*/
 
-  it('Read budget by date', async () => {
+  it.skip('Read budget by date', async () => {
     await e2e.step('Read budget')
       .spec('read')
       .get('/budget/{id}')
@@ -91,7 +91,7 @@ describe('Budget operations', () => {
       });
   });
 
-  it('Delete budget', async () => {
+  it.skip('Delete budget', async () => {
     await e2e.step('Delete budget')
       .spec('delete')
       .delete('/budget/{id}')
