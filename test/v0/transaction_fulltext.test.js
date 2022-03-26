@@ -24,7 +24,7 @@ describe('Transaction full text search', () => {
     await e2e.step('List transactions')
       .spec('read')
       .get('/transaction')
-      .withQueryParams('filter', '{"comment": "incme"}')
+      .withQueryParams('filter', '%7B%22comment%22%3A%22incme%22%7D')
       .expectJsonLike('data[*].attributes.comment', ['Income transaction']);
 
     await e2e.cleanup();
@@ -34,7 +34,7 @@ describe('Transaction full text search', () => {
     await e2e.step('List transactions')
       .spec('read')
       .get('/transaction')
-      .withQueryParams('filter', '{"tag": "incme"}')
+      .withQueryParams('filter', '%7B%22tag%22%3A%20%22incme%22%7D')
       .expectJsonLike('data[*].attributes.tags', ['income', 'transaction']);
 
     await e2e.cleanup();
