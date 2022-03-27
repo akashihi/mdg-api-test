@@ -1,7 +1,7 @@
 const pactum = require('pactum');
 const {createAccountForTransaction} = require('./transaction.handler');
 
-it.skip('Transaction with same currency is rebalanced precisely on currency change', async () => {
+it('Transaction with same currency is rebalanced precisely on currency change', async () => {
     await createAccountForTransaction();
     const usdAccountId = await pactum.spec('Create Account', {'@DATA:TEMPLATE@': 'Account:ExpenseUSD'})
         .stores('AssetUSDAccountID', 'data.id')
@@ -32,7 +32,7 @@ it.skip('Transaction with same currency is rebalanced precisely on currency chan
         .expectJsonLike('data.attributes.operations[*].rate', [1, 1]);
 }).timeout(15000);
 
-it.skip('Transaction with default currency is rebalanced correctly on currency change', async () => {
+it('Transaction with default currency is rebalanced correctly on currency change', async () => {
     const accountId = await pactum.spec('Create Account', {'@DATA:TEMPLATE@': 'Account:Expense'})
         .stores('AssetAccountID', 'data.id')
         .returns('data.id');
@@ -47,7 +47,7 @@ it.skip('Transaction with default currency is rebalanced correctly on currency c
         .put('/account/{id}')
         .withPathParams('id', accountId)
         .withJson({
-            '@DATA:TEMPLATE@': 'Account:Asset',
+            '@DATA:TEMPLATE@': 'Account:Expense',
             '@OVERRIDES@': {
                 data: {
                     attributes: {
@@ -57,7 +57,7 @@ it.skip('Transaction with default currency is rebalanced correctly on currency c
             }
         })
         .expectJson('data.attributes.currency_id', 840)
-        .expectJson('data.attributes.balance', 203);
+        .expectJson('data.attributes.balance', -200);
 
     await pactum.spec('read')
         .get('/transaction/{id}')
@@ -65,13 +65,13 @@ it.skip('Transaction with default currency is rebalanced correctly on currency c
         .expectJsonLike('data.attributes.operations[*].rate', [1, 1]);
 }).timeout(15000);
 
-it.skip('Transaction with multiple currencies have rate recalculated', async () => {
+it('Transaction with multiple currencies have rate recalculated', async () => {
     const usdAccountId = await pactum.spec('Create Account', {'@DATA:TEMPLATE@': 'Account:ExpenseUSD'})
         .stores('AssetUSDAccountID', 'data.id')
         .returns('data.id');
     const eurAccountId = await pactum.spec('Create Account', {
         '@DATA:TEMPLATE@': 'Account:ExpenseUSD',
-        '@OVERRIDE': {
+        '@OVERRIDES@': {
             data: {
                 attributes: {
                     currency_id: 978
@@ -84,7 +84,7 @@ it.skip('Transaction with multiple currencies have rate recalculated', async () 
 
     const czkAccountId = await pactum.spec('Create Account', {
         '@DATA:TEMPLATE@': 'Account:ExpenseUSD',
-        '@OVERRIDE': {
+        '@OVERRIDES@': {
             data: {
                 attributes: {
                     currency_id: 203
@@ -146,12 +146,12 @@ it.skip('Transaction with multiple currencies have rate recalculated', async () 
     await pactum.spec('read')
         .get('/account/{id}')
         .withPathParams('id', usdAccountId)
-        .expectJson('data.attributes.balance', -219);
+        .expectJson('data.attributes.balance', 100);
 
     await pactum.spec('read')
         .get('/account/{id}')
         .withPathParams('id', eurAccountId)
-        .expectJson('data.attributes.balance', -219);
+        .expectJson('data.attributes.balance', 100);
 
     await pactum.spec('read')
         .get('/transaction/{id}')
