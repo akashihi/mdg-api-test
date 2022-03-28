@@ -12,7 +12,7 @@ function makeTag (length) {
   return result;
 }
 
-it.skip('Tag retrieval', async () => {
+it('Tag retrieval', async () => {
   await createAccountForTransaction();
 
   const firstTag = makeTag(8);
