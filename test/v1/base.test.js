@@ -8,7 +8,7 @@ require('./settings.handler');
 require('./category.handler');
 require('./account.handler');
 require('./transaction.handler');
-//require('./budget.handler');
+require('./budget.handler');
 //require('./budget.entry.handler');
 
 // global hook

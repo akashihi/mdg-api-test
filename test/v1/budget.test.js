@@ -40,14 +40,12 @@ describe('Budget operations', () => {
 
   it('Budget account', async () => {
     await e2e.step('Post budget')
-      .spec('Create Budget', { '@DATA:TEMPLATE@': 'Budget:Feb' })
-      .stores('BudgetID', 'data.id')
+      .spec('Create Budget', { '@DATA:TEMPLATE@': 'Budget:Feb:V1' })
+      .stores('BudgetID', 'id')
       .expectJsonMatch({
-        '@DATA:TEMPLATE@': 'Budget:Feb',
+        '@DATA:TEMPLATE@': 'Budget:Feb:V1',
         '@OVERRIDES@': {
-          data: {
             id: int()
-          }
         }
       });
   });
@@ -55,23 +53,19 @@ describe('Budget operations', () => {
   it('List budgets', async () => {
     await e2e.step('List budgets')
       .spec('read')
-      .get('/budget')
-      .expectJsonMatch('data[*].id', expression('$S{BudgetID}', '$V.includes($S{BudgetID})'));
+      .get('/budgets')
+      .expectJsonMatch('budgets[*].id', expression('$S{BudgetID}', '$V.includes($S{BudgetID})'));
   });
 
   itParam('Budget with ${value.id} is invalid', INVALID_BUDGETS, async (params) => { // eslint-disable-line no-template-curly-in-string
     await e2e.step('Budget validity')
-      .spec('expect error', { statusCode: 412, errorCode: params.msg })
-      .post('/budget')
+      .spec('expect error', { statusCode: 412, title: params.msg })
+      .post('/budgets')
       .withJson({
-        '@DATA:TEMPLATE@': 'Budget:Feb',
+        '@DATA:TEMPLATE@': 'Budget:Feb:V1',
         '@OVERRIDES@': {
-          data: {
-            attributes: {
-              term_beginning: params.beginning,
-              term_end: params.end
-            }
-          }
+          term_beginning: params.beginning,
+          term_end: params.end
         }
       });
   });
@@ -79,14 +73,12 @@ describe('Budget operations', () => {
   it('Read budget by date', async () => {
     await e2e.step('Read budget')
       .spec('read')
-      .get('/budget/{id}')
+      .get('/budgets/{id}')
       .withPathParams('id', '20170205')
       .expectJsonMatch({
-        '@DATA:TEMPLATE@': 'Budget:Feb',
+        '@DATA:TEMPLATE@': 'Budget:Feb:V1',
         '@OVERRIDES@': {
-          data: {
-            id: int()
-          }
+          id: int()
         }
       });
   });
@@ -94,13 +86,13 @@ describe('Budget operations', () => {
   it('Delete budget', async () => {
     await e2e.step('Delete budget')
       .spec('delete')
-      .delete('/budget/{id}')
+      .delete('/budgets/{id}')
       .withPathParams('id', '$S{BudgetID}');
 
     await e2e.step('List budgets')
       .spec('read')
-      .get('/budget')
-      .expectJsonMatch('data[*].id', expression('$S{BudgetID}', '!$V.includes($S{BudgetID})'));
+      .get('/budgets')
+      .expectJsonMatch('budgets[*].id', expression('$S{BudgetID}', '!$V.includes($S{BudgetID})'));
 
     await e2e.cleanup();
   });
