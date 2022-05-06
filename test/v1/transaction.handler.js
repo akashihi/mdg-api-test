@@ -59,7 +59,7 @@ async function createUSDExpenseAccountForTransaction (e2e) {
     }
 
     return usdStep
-        .spec('Create Account', { '@DATA:TEMPLATE@': 'Account:ExpenseUSD:v1' })
+        .spec('Create Account', { '@DATA:TEMPLATE@': 'Account:Expense:USD:V1' })
         .stores('ExpenseUSDAccountID', 'id')
         .returns('id');
 }
