@@ -4,7 +4,7 @@ const { createAccountForTransaction } = require('./transaction.handler');
 describe('BudgetEntry <-> Transaction operations', () => {
   const e2e = pactum.e2e('BudgetEntry <-> Transaction operations');
 
-  it.skip('Prepare budget and accounts', async () => {
+  it('Prepare budget and accounts', async () => {
     await createAccountForTransaction(e2e);
     await e2e.step('Post budget')
       .spec('Create Budget', { '@DATA:TEMPLATE@': 'Budget:Feb' })
@@ -14,7 +14,7 @@ describe('BudgetEntry <-> Transaction operations', () => {
       .withPathParams('id', '$S{BudgetID}');
   });
 
-  it.skip('BudgetEntry actual amount is updated after transaction creation', async () => {
+  it('BudgetEntry actual amount is updated after transaction creation', async () => {
     await e2e.step('Create transaction')
       .spec('Create Transaction', { '@DATA:TEMPLATE@': 'Transaction:Rent' })
       .stores('TransactionID', 'data.id');
@@ -23,7 +23,7 @@ describe('BudgetEntry <-> Transaction operations', () => {
       .spec('Validate Budget Entry actual amount', 100);
   });
 
-  it.skip('BudgetEntry actual amount is updated after transaction editing', async () => {
+  it('BudgetEntry actual amount is updated after transaction editing', async () => {
     await e2e.step('Update transaction')
       .spec('update')
       .put('/transaction/{id}')
@@ -52,7 +52,7 @@ describe('BudgetEntry <-> Transaction operations', () => {
       .spec('Validate Budget Entry actual amount', 70);
   });
 
-  it.skip('BudgetEntry actual amount is reverted after transaction deletion', async () => {
+  it('BudgetEntry actual amount is reverted after transaction deletion', async () => {
     await e2e.step('Delete transaction')
       .spec('delete')
       .delete('/transaction/{id}')
