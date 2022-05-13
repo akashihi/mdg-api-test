@@ -53,4 +53,4 @@ async function dropTree(tree) {
     await pactum.spec().delete('/categories/{id}').withPathParams("id", tree.inner);
 }
 
-module.exports = {makeTree, dropTree}
+module.exports = {makeTree, dropTree};

@@ -2,7 +2,7 @@ const { addSpecHandler } = require('pactum').handler;
 
 addSpecHandler('expect success', (ctx) => {
     const { spec, data } = ctx;
-    spec.withHeaders('Content-Type', 'application/vnd.mdg+json;version=1')
+    spec.withHeaders('Content-Type', 'application/vnd.mdg+json;version=1');
     spec.expectStatus(data);
     spec.expectHeader('content-type', 'application/vnd.mdg+json;version=1');
 });

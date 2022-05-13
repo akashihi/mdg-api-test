@@ -46,7 +46,7 @@ describe('Budget entries operations', () => {
             .spec('read')
             .get('/budgets/{id}/entries/{entryId}')
             .withPathParams({id: '$S{BudgetID}', entryId: '$S{BudgetEntryID}'})
-            .expectJson('id', '$S{BudgetEntryID}')
+            .expectJson('id', '$S{BudgetEntryID}');
     });
 
     it('Update budget entry by id', async () => {

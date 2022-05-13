@@ -36,11 +36,11 @@ describe('Account primary balance', () => {
             .spec('Create Transaction', {'@DATA:TEMPLATE@': 'Transaction:Income'});
 
         const now = new Date();
-        const now_ts = now.toISOString().slice(0, 19);
+        const nowTs = now.toISOString().slice(0, 19);
 
         const rate = await pactum.spec('read')
             .get('/rate/{ts}/{from}/{to}')
-            .withPathParams('ts', now_ts)
+            .withPathParams('ts', nowTs)
             .withPathParams('from', 840)
             .withPathParams('to', 978)
             .returns("data.attributes.rate");

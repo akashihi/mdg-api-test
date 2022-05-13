@@ -1,5 +1,5 @@
 const pactum = require('pactum');
-const {makeTree, dropTree} = require('./category.handler')
+const {makeTree, dropTree} = require('./category.handler');
 const {stash} = require("pactum");
 
 describe('Category-Account tree', () => {

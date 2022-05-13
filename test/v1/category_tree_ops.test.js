@@ -1,5 +1,5 @@
 const pactum = require('pactum');
-const {makeTree, dropTree} = require('./category.handler')
+const {makeTree, dropTree} = require('./category.handler');
 
 it('Category parenting', async () => {
     const categories = await makeTree();
