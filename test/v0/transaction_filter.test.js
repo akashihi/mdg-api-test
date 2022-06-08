@@ -8,7 +8,7 @@ describe('Transaction filtering', () => {
   it('Create multiple transactions', async () => {
     await createAccountForTransaction(e2e);
 
-    await e2e.step('Create transaction')
+    await e2e.step('Create Transaction')
       .spec('Create Transaction', {
         '@DATA:TEMPLATE@': 'Transaction:Rent',
         '@OVERRIDES@': {
@@ -20,7 +20,7 @@ describe('Transaction filtering', () => {
         }
       });
 
-    await e2e.step('Create transaction')
+    await e2e.step('Create Transaction')
       .spec('Create Transaction', {
         '@DATA:TEMPLATE@': 'Transaction:Rent',
         '@OVERRIDES@': {
@@ -31,7 +31,7 @@ describe('Transaction filtering', () => {
           }
         }
       });
-    await e2e.step('Create transaction')
+    await e2e.step('Create Transaction')
       .spec('Create Transaction', { '@DATA:TEMPLATE@': 'Transaction:Rent' });
   });
 
@@ -119,7 +119,7 @@ describe('Transaction filtering', () => {
     await e2e.step('List transactions')
       .spec('read')
       .get('/transaction')
-      .withQueryParams('filter', '{"account_id": [$S{AssetAccountID}]}')
+      .withQueryParams('filter', '%7B%22account_id%22%3A%20%22%5B$S{AssetAccountID}%5D%22%7D')
       .expectJsonMatch('data', expression('1', '$V.length === 3')); // We use new account ids and create 3 transactions with the same account
 
     await e2e.cleanup();

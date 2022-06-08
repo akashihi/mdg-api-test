@@ -1,0 +1,10 @@
+{
+  "Account:Asset:USD:V1": {
+    "account_type": "asset",
+    "currency_id" : 840,
+    "name"        : "Wallet USD",
+    "favorite"    : false,
+    "operational" : false,
+    "asset_type"  : "cash"
+  }
+}

@@ -6,7 +6,7 @@ const standard = require('gulp-standard')
 const jshint = require('gulp-jshint');
 
 function standardjs() {
-    return gulp.src(['test/*.js'])
+    return gulp.src(['test/**/*.js'])
         .pipe(standard({fix: true, env: "mocha"}))
         .pipe(standard.reporter('default', {
             breakOnError: true,
@@ -15,14 +15,14 @@ function standardjs() {
 }
 
 function jshint_task() {
-    return gulp.src(['test/*.js'])
+    return gulp.src(['test/**/*.js'])
         .pipe(jshint())
         .pipe(jshint.reporter('jshint-stylish'))
         .pipe(jshint.reporter('fail'));
 }
 
 function lint() {
-    return gulp.src(['test/*.js'])
+    return gulp.src(['test/**/*.js'])
         // eslint() attaches the lint output to the "eslint" property
         // of the file object so it can be used by other modules.
         .pipe(eslint())
@@ -34,11 +34,19 @@ function lint() {
         .pipe(eslint.failAfterError());
 }
 
-function test() {
-    return gulp.src('test/*.js', {read: false})
+function test_v0() {
+    return gulp.src('test/v0/*.js', {read: false})
+        // `gulp-mocha` needs filepaths so you can't have any plugins before it
+        .pipe(mocha({reporter: 'list'}));
+}
+
+function test_v1() {
+    return gulp.src('test/v1/*.js', {read: false})
         // `gulp-mocha` needs filepaths so you can't have any plugins before it
         .pipe(mocha({reporter: 'list'}));
 }
 
 exports.default = series(standardjs, jshint_task, lint)
-exports.test = test
+exports.test = series(test_v0, test_v1)
+exports.test_v0 = test_v0
+exports.test_v1 = test_v1

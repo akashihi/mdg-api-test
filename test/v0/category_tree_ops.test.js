@@ -1,5 +1,4 @@
 const pactum = require('pactum');
-const { expression } = require('pactum-matchers');
 
 async function makeTree () {
   const outerCategoryID = await pactum.spec('Create Category', {
@@ -70,8 +69,8 @@ it('Category re-parenting', async () => {
           }
         }
       }
-    });
-    // .expectJson("data.attributes.parent_id", outerCategoryID) //TODO backend bug
+    })
+    .expectJson("data.attributes.parent_id", categories.outer);
 
   await pactum.spec('Get Category Tree', categories.outer)
     .expectJsonLike('data.attributes.children[*].id', [categories.middle, categories.inner]);
@@ -110,11 +109,11 @@ it('Self re-parenting move to top', async () => {
           }
         }
       }
-    });
-    // .expectJson("data.attributes.parent_id", null) //TODO backend bug
+    })
+    .expectJson("data.attributes.parent_id", 0);
 
   await pactum.spec('Get Category Tree', categories.outer)
-    .expectJsonMatch('data.attributes', expression('undefined', '!$V.hasOwnProperty("children")'));
+    .expectJsonLike('data.attributes.children', []);
 
   await pactum.spec('Get Category Tree', categories.middle)
     .expectJson('data.attributes.children[0].id', categories.inner);
